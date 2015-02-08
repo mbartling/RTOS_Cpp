@@ -9,8 +9,9 @@ private:
   T storage[N];
   int8_t status[N];
   int numUsed;
+  int lastAccessed;
 public:
-  Pool(void) : numUsed(0){
+  Pool(void) : numUsed(0), lastAccessed(0){
     for(int i = 0; i < N; i++){
       status[i] = 0;
     }
@@ -29,7 +30,7 @@ public:
 
     T* res = &storage[nextAvail];
     status[nextAvail] = 1;
-     
+    lastAccessed = nextAvail;
     numUsed++;
     return res;
   }
@@ -48,6 +49,9 @@ public:
   }
   int available(void) const{
     return N - numUsed;
+  }
+  int getId(void){
+    return lastAccessed;
   }
 
 };
