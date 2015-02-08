@@ -3,6 +3,7 @@
 
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
 Tcb_t* RunningThread; 
+TcbListC_t ThreadList;
 
 void TCB_SetInitialStack(Tcb_t* pTcb)
 {
@@ -17,5 +18,23 @@ int TCB_Available(void){
 }
 
 Tcb_t* TCB_GetNewThread(void){
-  return ThreadPool.get();
+  Tcb_t* thread =  ThreadPool.get();
+  thread->next = thread;
+  thread->prev = thread;
+  thread->id = ThreadPool.getId();
+  return thread;
+}
+
+void TCB_InsertNodeBeforeRoot(Tcb_t* node)
+{
+  if(ThreadList.count > 0){
+    node->next = RunningThread;
+    node->prev = RunningThread->prev;
+    node->prev->next = node;
+    RunningThread->prev = node;
+  }
+  else {
+    ThreadList.head = node;
+    RunningThread = node;
+  }
 }
