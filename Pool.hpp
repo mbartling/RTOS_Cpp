@@ -19,7 +19,7 @@ public:
 
 
   T* get(void){
-    int nextAvail;
+    int nextAvail = 0;
 
     for(int i = 0; i < N; i++){
       if(status[i] == 0){

@@ -61,8 +61,9 @@ int OS_AddThread(void(*task)(void),
   status = StartCritical();
   // Tcb_t* thread = &TcbTable[ThreadCount];
   Tcb_t* thread = TCB_GetNewThread();
-  TCB_SetInitialStack(thread);
-
+  TCB_SetInitialStack(thread);  //Set thumb bit and dummy regs
+  thread->stack[STACKSIZE-2] = (int32_t) (task); //return to task
+  thread->priority = priority;
   ThreadCount++;
   EndCritical(status);
   return 1;

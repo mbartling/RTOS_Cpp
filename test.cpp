@@ -5,8 +5,12 @@
 #include "Stack.hpp"
 #include "os.h"
 
-Pool<int, 50> mPool;
-Stack<512> mStack;
+//Pool<int, 50> mPool;
+//Stack<512> mStack;
+
+void dummy(void){
+  printf("Hi there\n");
+}
 
 int main(){
  //  PLL_Init();
@@ -30,6 +34,7 @@ int main(){
 	
   OS_Init();
 
+  OS_AddThread(dummy, 255, 5);
   OS_Launch(80000);
   printf("Done\n");
   return 0;  

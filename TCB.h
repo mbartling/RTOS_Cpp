@@ -13,7 +13,7 @@ typedef struct _Tcb {
   struct _Tcb* prev;  //!< Previous TCB element
   int32_t id;         //!< Thread ID
   int32_t state_sleep;//!< used to suspend execution
-  int32_t priority;   //!< Thread priority
+  uint32_t priority;   //!< Thread priority
   int32_t state_blocked; //!<Used in lab 3
   int32_t stack[STACKSIZE]; //!<Thread stack
 } Tcb_t;
