@@ -1,5 +1,6 @@
 #include "TCB.h"
 #include "Pool.hpp"
+#include <stdio.h>
 
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
 Tcb_t* RunningThread; 
@@ -37,4 +38,17 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
     ThreadList.head = node;
     RunningThread = node;
   }
+  ThreadList.count++;
 }
+
+Tcb_t* TCB_GetRunningThread(void){
+  return RunningThread;
+}
+/*
+void dummy(void){
+  printf("Attempting Task\n");
+  void (*Task)(void);
+  Task = (void (*)(void)) RunningThread->stack[STACKSIZE - 2];
+  Task();
+}
+*/

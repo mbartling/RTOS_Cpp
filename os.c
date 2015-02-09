@@ -52,18 +52,22 @@ int OS_AddThread(void(*task)(void),
   if(priority > 5){
     return 0;
   }
-  // if(ThreadCount > (MAXNUMTHREADS - 1)){
-  if(TCB_Available() == 0)
-	{
-    return 0;
-  }
   long status;
   status = StartCritical();
+  // if(ThreadCount > (MAXNUMTHREADS - 1)){
+  if(!TCB_Available())
+	{
+    EndCritical(status);
+    return 0;
+  }
+
   // Tcb_t* thread = &TcbTable[ThreadCount];
   Tcb_t* thread = TCB_GetNewThread();
   TCB_SetInitialStack(thread);  //Set thumb bit and dummy regs
   thread->stack[STACKSIZE-2] = (int32_t) (task); //return to task
   thread->priority = priority;
+	TCB_InsertNodeBeforeRoot(thread);
+
   ThreadCount++;
   EndCritical(status);
   return 1;

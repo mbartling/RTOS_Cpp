@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include "Stack.hpp"
 #include "os.h"
-
+#include "TCB.h"
 //Pool<int, 50> mPool;
 //Stack<512> mStack;
 
-void dummy(void){
+void dummy1(void){
   printf("Hi there\n");
 }
 
@@ -34,8 +34,11 @@ int main(){
 	
   OS_Init();
 
-  OS_AddThread(dummy, 255, 5);
+  OS_AddThread(dummy1, 255, 5);
+  //dummy();
+
   OS_Launch(80000);
+
   printf("Done\n");
   return 0;  
 }
