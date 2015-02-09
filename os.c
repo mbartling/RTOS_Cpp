@@ -10,11 +10,16 @@
 extern "C" {
 #endif
 
+// #define SYSTICK_EN 1
+
 void DisableInterrupts(void); // Disable interrupts
 void EnableInterrupts(void);  // Enable interrupts
 long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
+void StartOS(void);
+void ContextSwitch(void);
+// void PendSV_Handler(void);
 
 #ifdef __cplusplus
  }
@@ -31,7 +36,9 @@ void OS_Init(void)
 {
   DisableInterrupts();
   PLL_Init();
+#ifdef SYSTICK_EN
   SysTick_Init(160000); //2 Ms period default
+#endif
   UART0_Init();
 
 }
@@ -83,7 +90,10 @@ int OS_AddThread(void(*task)(void),
 // output: none
 void OS_Suspend(void)
 {
+  //This is where we would do any scheduling
 
+  // NVIC_INT_CTRL_R = 0x10000000; //Trigger PendSV
+  NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
 
 //******** OS_Launch *************** 
@@ -96,8 +106,18 @@ void OS_Suspend(void)
 // It is ok to limit the range of theTimeSlice to match the 24-bit SysTick
 void OS_Launch(unsigned long theTimeSlice)
 {
+#ifdef SYSTICK_EN
   NVIC_ST_RELOAD_R = theTimeSlice - 1;
   NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
-
+#endif
   EnableInterrupts();
+  StartOS();
 }
+
+// void SysTick_Handler(void){
+  
+//   ContextSwitch();
+// }
+// void PendSV_Handler(void){
+//   ContextSwitch();
+// }

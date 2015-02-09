@@ -9,9 +9,17 @@
 //Stack<512> mStack;
 
 void dummy1(void){
-  printf("Hi there\n");
+  while(1){
+   printf("Hi there 1\n");
+   OS_Suspend();
+  }
 }
-
+void dummy2(void){
+  while(1){
+   printf("Hi there 2\n");
+   OS_Suspend();
+  }
+}
 int main(){
  //  PLL_Init();
  //  UART0_Init();
@@ -35,9 +43,11 @@ int main(){
   OS_Init();
 
   OS_AddThread(dummy1, 255, 5);
+  OS_AddThread(dummy2, 255, 5);
+
   //dummy();
 
-  OS_Launch(80000);
+  OS_Launch(320000);
 
   printf("Done\n");
   return 0;  

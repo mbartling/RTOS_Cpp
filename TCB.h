@@ -5,17 +5,18 @@
 
 #define MAXNUMTHREADS 3  /** Maximum number of threads*/
 #define STACKSIZE 100 /** number of 32bit words in stack */
+/*Note: use 16 words per context switch*/
 
 typedef struct _Tcb {
-  int32_t* sp;        //!< Stack Pointer
+  int32_t* sp;        //!< Stack Pointer: OFFSET 0
                       //!< Valid for threads not running        
-  struct _Tcb* next;  //!< Next TCB Element
-  struct _Tcb* prev;  //!< Previous TCB element
-  int32_t id;         //!< Thread ID
-  int32_t state_sleep;//!< used to suspend execution
-  uint32_t priority;   //!< Thread priority
-  int32_t state_blocked; //!<Used in lab 3
-  int32_t stack[STACKSIZE]; //!<Thread stack
+  struct _Tcb* next;  //!< Next TCB Element: OFFSET 4
+  struct _Tcb* prev;  //!< Previous TCB element: OFFSET 8
+  int32_t id;         //!< Thread ID: OFFSET 16
+  int32_t state_sleep;//!< used to suspend execution: OFFSET 20
+  uint32_t priority;   //!< Thread priority: OFFSET 24
+  int32_t state_blocked; //!<Used in lab 3: OFFSET 28
+  int32_t stack[STACKSIZE]; //!<Thread stack: OFFSET 32
 } Tcb_t;
 
 /**
