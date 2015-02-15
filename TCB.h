@@ -7,6 +7,10 @@
 #define STACKSIZE 100 /** number of 32bit words in stack */
 /*Note: use 16 words per context switch*/
 
+/**
+ * @brief TCB Element
+ * 
+ */
 typedef struct _Tcb {
   int32_t* sp;        //!< Stack Pointer: OFFSET 0
                       //!< Valid for threads not running        

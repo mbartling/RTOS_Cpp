@@ -27,11 +27,14 @@ void ContextSwitch(void);
 
 int32_t ThreadCount = 0;
 
-// ******** OS_Init ************
-// initialize operating system, disable interrupts until OS_Launch
-// initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 
-// input:  none
-// output: none
+/** ******** OS_Init ************
+ * @brief initialize operating system, disable interrupts until OS_Launch
+ * @details initialize OS controlled I/O: serial, ADC, systick, LaunchPad 
+ * I/O and timers 
+ * 
+ * @param input:  none
+ * @return output: none
+ */
 void OS_Init(void)
 {
   DisableInterrupts();
@@ -45,15 +48,17 @@ void OS_Init(void)
 
 
 
-//******** OS_AddThread *************** 
-// add a foregound thread to the scheduler
-// Inputs: pointer to a void/void foreground task
-//         number of bytes allocated for its stack
-//         priority, 0 is highest, 5 is the lowest
-// Outputs: 1 if successful, 0 if this thread can not be added
-// stack size must be divisable by 8 (aligned to double word boundary)
-// In Lab 2, you can ignore both the stackSize and priority fields
-// In Lab 3, you can ignore the stackSize fields
+/** ******** OS_AddThread *************** 
+ * @brief add a foregound thread to the scheduler
+ * Inputs: pointer to a void/void foreground task
+ *         number of bytes allocated for its stack
+ *         priority, 0 is highest, 5 is the lowest
+ * Outputs: 1 if successful, 0 if this thread can not be added
+ * stack size must be divisable by 8 (aligned to double word boundary)
+ * In Lab 2, you can ignore both the stackSize and priority fields
+ * In Lab 3, you can ignore the stackSize fields
+ */
+
 int OS_AddThread(void(*task)(void), 
   unsigned long stackSize, unsigned long priority){
   if(priority > 5){
@@ -81,13 +86,16 @@ int OS_AddThread(void(*task)(void),
 }
 
 
-// ******** OS_Suspend ************
-// suspend execution of currently running thread
-// scheduler will choose another thread to execute
-// Can be used to implement cooperative multitasking 
-// Same function as OS_Sleep(0)
-// input:  none
-// output: none
+
+/** ******** OS_Suspend ************
+ * @brief suspend execution of currently running thread
+ * @details scheduler will choose another thread to execute
+ * Can be used to implement cooperative multitasking 
+ * Same function as OS_Sleep(0)
+ *
+ * @param input:  none
+ * @return output: none
+ */
 void OS_Suspend(void)
 {
   //This is where we would do any scheduling
@@ -96,14 +104,17 @@ void OS_Suspend(void)
   NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
 
-//******** OS_Launch *************** 
-// start the scheduler, enable interrupts
-// Inputs: number of 12.5ns clock cycles for each time slice
-//         you may select the units of this parameter
-// Outputs: none (does not return)
-// In Lab 2, you can ignore the theTimeSlice field
-// In Lab 3, you should implement the user-defined TimeSlice field
-// It is ok to limit the range of theTimeSlice to match the 24-bit SysTick
+/** ******** OS_Launch *************** 
+ * @brief start the scheduler, enable interrupts
+ * @details Inputs: number of 12.5ns clock cycles for each time slice
+ *         you may select the units of this parameter
+ * Outputs: none (does not return)
+ * In Lab 2, you can ignore the theTimeSlice field
+ * In Lab 3, you should implement the user-defined TimeSlice field
+ * It is ok to limit the range of theTimeSlice to match the 24-bit SysTick
+ * @param input:  none
+ * @return output: none
+ */
 void OS_Launch(unsigned long theTimeSlice)
 {
 #ifdef SYSTICK_EN
