@@ -14,8 +14,7 @@ void EndCritical(long sr);    // restore I bit to previous value
 
 template <typename T>
  class Fifo{
-protected:
-  enum Status {FAIL=-1, SUCCESS=0};
+ 	enum Status {FAIL=-1, SUCCESS=0};
 
  public:
   virtual int Put(T data){
@@ -40,7 +39,8 @@ class FifoP : public Fifo<T>{
   T volatile * PutPt;
   T volatile * GetPt;
   T FifoData[Size];
-  
+  enum Status {FAIL=-1, SUCCESS=0};
+
 
 public:
   FifoP(){
@@ -68,7 +68,7 @@ public:
   }
 
   int Get(T *data){
-    if(PutPt = GetPt){
+    if(PutPt == GetPt){
       return(FAIL);
     }
     *data = *(GetPt++);
@@ -86,4 +86,42 @@ public:
   }
 };
 
+template<typename T, int Size> 
+class FifoI : public Fifo<T>{
+  uint32_t volatile PutI;
+  uint32_t volatile GetI;
+  T FifoData[Size];
+  enum Status {FAIL=-1, SUCCESS=0};
+
+public:
+  FifoI(){
+    long sr;
+    sr = StartCritical();
+    PutI = GetI = 0;
+    EndCritical(sr);
+  }
+
+  int Put(T data){
+    if((PutI - GetI) & ~(Size - 1)){
+      return FAIL;
+    }
+    FifoData[PutI & (Size - 1)] = data;
+    PutI++;
+    return SUCCESS;
+  }
+
+  int Get(T* data){
+    if(PutI == GetI){
+      return(FAIL);
+    }
+    *data = FifoData[GetI & (Size - 1)];
+    GetI++;
+    return SUCCESS;
+  }
+
+  unsigned short getSize(void){
+    return (unsigned short)(PutI - GetI);
+  }
+
+};
 #endif /*__FIFO_HPP__*/
