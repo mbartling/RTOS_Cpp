@@ -187,7 +187,8 @@ int OS_AddPeriodicThread(void(*task)(void),
 void OS_Sleep(unsigned long sleepTime) {
     long status = StartCritical();
     Tcb_t * runningThread = TCB_GetRunningThread();
-    runningThread-> state_sleep = 1;
+    runningThread-> state_sleep = sleepTime;
+    TCB_RemoveRunningAndSleep();
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
     EndCritical(status); 
 }
@@ -294,6 +295,7 @@ void SysTick_Handler(void){
         }while(possibleSleepingThread != runningThread);
     } 
     */
+    TCB_UpdateSleeping();
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
 }

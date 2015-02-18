@@ -4,7 +4,9 @@
 
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
 Tcb_t* RunningThread = NULL;
+Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
+TcbListC_t SleepingList;
 
 void TCB_SetInitialStack(Tcb_t* pTcb)
 {
@@ -43,6 +45,7 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 
 
 void TCB_RemoveRunningThread(void) {
+    Tcb_t* thread = RunningThread;
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
@@ -51,8 +54,21 @@ void TCB_RemoveRunningThread(void) {
         RunningThread = NULL; 
         ThreadList.count--;
     } 
+    ThreadPool.free(thread);
 }
 
+void TCB_RemoveRunningAndSleep(void) {
+    Tcb_t* thread = RunningThread;
+    if(ThreadList.count > 1){
+        (RunningThread->prev)->next = RunningThread->next;
+        (RunningThread->next)->prev = RunningThread->prev;
+        ThreadList.count--;
+    }else if(ThreadList.count == 1){
+        RunningThread = NULL; 
+        ThreadList.count--;
+    } 
+    TCB_AddSleeping(thread);
+}
 Tcb_t* TCB_GetRunningThread(void){
   return RunningThread;
 }
@@ -62,7 +78,56 @@ int TCB_threadListEmpty(void){
 }
 
 
+void TCB_AddSleeping(Tcb_t* node)
+{
+  if(SleepingList.count > 0){
+    node->next = SleepingThread;
+    node->prev = SleepingThread->prev;
+    node->prev->next = node;
+    SleepingThread->prev = node;
+  }
+  else {
+    SleepingList.head = node;
+    SleepingThread = node;
+  }
+  SleepingList.count++;
+}
 
+void TCB_RemoveSleepingNode(Tcb_t* thread){
+  if(SleepingList.count > 1){
+        (thread->prev)->next = thread->next;
+        (thread->next)->prev = thread->prev;
+        SleepingList.count--;
+    }else if(SleepingList.count == 1){
+        SleepingThread = NULL; 
+        SleepingList.count--;
+    } 
+}
+// void TCB_RemoveSleepingAndAdd2Run(void) {
+//     Tcb_t* sleepingNode = SleepingList.head;
+    
+//     while(sleepingNode->next != SleepingList.head){
+//     if(sleepingNode->state_sleep < 1){
+//       TCB_RemoveSleepingNode(sleepingNode);
+//       TCB_InsertNodeBeforeRoot(sleepingNode);
+//     }
+//     sleepingNode = sleepingNode->next;
+//   }
+// }
+
+void TCB_UpdateSleeping(void) {
+    Tcb_t* sleepingNode = SleepingList.head;
+    
+    while(sleepingNode->next != SleepingList.head){
+      sleepingNode->state_sleep--;
+
+      if(sleepingNode->state_sleep < 1){
+        TCB_RemoveSleepingNode(sleepingNode);
+        TCB_InsertNodeBeforeRoot(sleepingNode);
+    }
+    sleepingNode = sleepingNode->next;
+  }
+}
 /*
 void dummy(void){
   printf("Attempting Task\n");

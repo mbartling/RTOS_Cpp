@@ -40,5 +40,9 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node);
 Tcb_t* TCB_GetRunningThread(void);
 int TCB_threadListEmpty(void);
 void TCB_RemoveRunningThread(void);
+void TCB_UpdateSleeping(void);
+void TCB_RemoveSleepingNode(Tcb_t* thread);
+void TCB_AddSleeping(Tcb_t* node);
+void TCB_RemoveRunningAndSleep(void);
 //void dummy(void); // Tests if function pointer set properly
 #endif /*__TCB_H__*/
