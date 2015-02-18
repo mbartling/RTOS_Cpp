@@ -3,14 +3,10 @@
 
 #include <stdint.h>
 
-#define MAXNUMTHREADS 3  /** Maximum number of threads*/
+#define MAXNUMTHREADS 10  /** Maximum number of threads*/
 #define STACKSIZE 100 /** number of 32bit words in stack */
 /*Note: use 16 words per context switch*/
 
-/**
- * @brief TCB Element
- * 
- */
 typedef struct _Tcb {
   int32_t* sp;        //!< Stack Pointer: OFFSET 0
                       //!< Valid for threads not running        
@@ -42,6 +38,7 @@ int TCB_Available(void);
 Tcb_t* TCB_GetNewThread(void);
 void TCB_InsertNodeBeforeRoot(Tcb_t* node);
 Tcb_t* TCB_GetRunningThread(void);
-
+int TCB_threadListEmpty(void);
+void TCB_RemoveRunningThread(void);
 //void dummy(void); // Tests if function pointer set properly
 #endif /*__TCB_H__*/

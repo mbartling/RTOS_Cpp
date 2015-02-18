@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
-Tcb_t* RunningThread; 
+Tcb_t* RunningThread = NULL;
 TcbListC_t ThreadList;
 
 void TCB_SetInitialStack(Tcb_t* pTcb)
@@ -41,9 +41,28 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
   ThreadList.count++;
 }
 
+
+void TCB_RemoveRunningThread(void) {
+    if(ThreadList.count > 1){
+        (RunningThread->prev)->next = RunningThread->next;
+        (RunningThread->next)->prev = RunningThread->prev;
+        ThreadList.count--;
+    }else if(ThreadList.count == 1){
+        RunningThread = NULL; 
+        ThreadList.count--;
+    } 
+}
+
 Tcb_t* TCB_GetRunningThread(void){
   return RunningThread;
 }
+
+int TCB_threadListEmpty(void){
+    return (ThreadList.count == 0);
+}
+
+
+
 /*
 void dummy(void){
   printf("Attempting Task\n");
