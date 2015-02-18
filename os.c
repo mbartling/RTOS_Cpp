@@ -29,11 +29,12 @@ void GPIOPortF_Handler(void);
 
 int32_t ThreadCount = 0;
 
-// ******** OS_Init ************
-// initialize operating system, disable interrupts until OS_Launch
-// initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 
-// input:  none
-// output: none
+ /********* OS_Init ************
+ * initialize operating system, disable interrupts until OS_Launch
+ * initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 
+ * @param  input:  none
+ * @return output: none
+ */
 void OS_Init(void)
 {
   DisableInterrupts();
@@ -295,7 +296,10 @@ void SysTick_Handler(void){
         }while(possibleSleepingThread != runningThread);
     } 
     */
+    long status;
+    status = StartCritical();
     TCB_UpdateSleeping();
+    EndCritical(status);
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
 }

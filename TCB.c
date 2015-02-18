@@ -102,6 +102,8 @@ void TCB_RemoveSleepingNode(Tcb_t* thread){
         SleepingThread = NULL; 
         SleepingList.count--;
     } 
+    thread->next = thread;
+    thread->prev = thread;
 }
 // void TCB_RemoveSleepingAndAdd2Run(void) {
 //     Tcb_t* sleepingNode = SleepingList.head;
@@ -117,7 +119,7 @@ void TCB_RemoveSleepingNode(Tcb_t* thread){
 
 void TCB_UpdateSleeping(void) {
     Tcb_t* sleepingNode = SleepingList.head;
-    if(sleepingNode == NULL) return;
+    
     while(sleepingNode->next != SleepingList.head){
       sleepingNode->state_sleep--;
 

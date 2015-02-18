@@ -1,6 +1,7 @@
 #ifndef __FIFO_HPP__
 #define __FIFO_HPP__
 
+#include "os.c"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,6 +16,8 @@ void EndCritical(long sr);    // restore I bit to previous value
 template <typename T>
  class Fifo{
  	enum Status {FAIL=-1, SUCCESS=0};
+  Sema4Type m;
+  Sema4Type available;
 
  public:
   virtual int Put(T data){
@@ -23,6 +26,19 @@ template <typename T>
   virtual int Get(T* data){
     return (FAIL);
   }
+  inline void Wait(){
+    OS_Wait(&available);
+  }
+  inline void bWait(){
+    OS_bWait(&m);
+  }
+  inline void Signal(){
+    OS_Signal(&available);
+  }
+  inline void bSignal(){
+    OS_bSignal(&m);
+  }
+
   virtual unsigned short getSize(void){
     return (unsigned short) 0;
   }
@@ -58,8 +74,12 @@ public:
       nextPutPt = &FifoData[0];
     }
     if(nextPutPt == GetPt){
-      return(FAIL);
+      // return(FAIL);
+    
+    while(nextPutPt == GetPt){
+      Wait();
     }
+  }
     else{
       *(PutPt) = data;
       PutPt = nextPutPt;
@@ -68,13 +88,19 @@ public:
   }
 
   int Get(T *data){
-    if(PutPt == GetPt){
-      return(FAIL);
+    // if(PutPt == GetPt){
+      // return(FAIL);
+    // }
+    while(GetPt == PutPt){
+      Wait(); //Wait till available
     }
+    bWait();
     *data = *(GetPt++);
     if(GetPt == &FifoData[Size]){
       GetPt = &FifoData[0];
     }
+    bSignal();
+    Signal();
     return SUCCESS;
   }
 
