@@ -12,6 +12,22 @@ void EndCritical(long sr);    // restore I bit to previous value
  }
 #endif
 
+template <typename T>
+ class Fifo{
+protected:
+  enum Status {FAIL=-1, SUCCESS=0};
+
+ public:
+  virtual int Put(T data){
+    return FAIL; 
+  }
+  virtual int Get(T* data){
+    return (FAIL);
+  }
+  virtual unsigned short getSize(void){
+    return (unsigned short) 0;
+  }
+ };
 /**
  * @brief Pointer type Fifo
  * @details [long description]
@@ -20,11 +36,11 @@ void EndCritical(long sr);    // restore I bit to previous value
  * @tparam Size [description]
  */
 template <typename T, int Size>
-class FifoP {
+class FifoP : public Fifo<T>{
   T volatile * PutPt;
   T volatile * GetPt;
   T FifoData[Size];
-  enum Status {FAIL=-1, SUCCESS=0};
+  
 
 public:
   FifoP(){
