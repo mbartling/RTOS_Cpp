@@ -46,6 +46,7 @@ void OS_Init(void)
   SysTick_Init(160000); //2 Ms period default
 #endif
   UART0_Init();
+  TCB_Configure_IdleThread(); //Set up the idle thread
 }
 
 

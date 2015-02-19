@@ -18,6 +18,13 @@ void Idle(void){
   }
 }
 
+/**
+ * @brief Configure the idle thread
+ * @details The idle thread exists when the scheduler is empty.
+ * This way the code does not hardfault on an invalid context switch. In
+ * other words, there are no threads to switch to in the list and we do 
+ * not want to context switch to null.
+ */
 void TCB_Configure_IdleThread(void){
   idleThread = TCB_GetNewThread();
   TCB_SetInitialStack(idleThread);
