@@ -28,13 +28,10 @@ void GPIOPortF_Handler(void);
 #endif
 
 int32_t ThreadCount = 0;
-Tcb_t idleThreadMem;
-Tcb_t* idleThread = &idleThreadMem;
-void Idle(void){
-  while(1){
-    //Idle
-  }
-}
+// Tcb_t idleThreadMem;
+// Tcb_t* idleThread = &idleThreadMem;
+
+
  /********* OS_Init ************
  * initialize operating system, disable interrupts until OS_Launch
  * initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 

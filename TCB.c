@@ -8,6 +8,25 @@ Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
 TcbListC_t SleepingList;
 //sleepListS_t SleepingList;
+Tcb_t* idleThread = NULL;
+
+void Idle(void){
+  uint32_t idleTime;
+  while(1){
+    //Idle
+    idleTime++;
+  }
+}
+
+void TCB_Configure_IdleThread(void){
+  idleThread = TCB_GetNewThread();
+  TCB_SetInitialStack(idleThread);
+  idleThread->stack[STACKSIZE-2] = (int32_t) (Idle); //return to IDLE
+  ThreadList.head = idleThread;
+  RunningThread = idleThread;
+
+}
+
 void TCB_SetInitialStack(Tcb_t* pTcb)
 {
   int32_t* stack = pTcb->stack;
@@ -37,8 +56,8 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
     RunningThread->prev = node;
   }
   else {
-    ThreadList.head = node;
-    RunningThread = node;
+    ThreadList.head = node;  //<! Replace Idle Thread with node
+    RunningThread = node;    //<! Replace Idle Thread with node
   }
   ThreadList.count++;
 }
@@ -51,7 +70,9 @@ void TCB_RemoveRunningThread(void) {
         (RunningThread->next)->prev = RunningThread->prev;
         ThreadList.count--;
     }else if(ThreadList.count == 1){
-        RunningThread = NULL; 
+        // RunningThread = NULL;
+        RunningThread = idleThread;   //Make Sure to never call sleep on idle thread
+        ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
         ThreadList.count--;
     } 
     ThreadPool.free(thread);
@@ -64,7 +85,10 @@ void TCB_RemoveRunningAndSleep(void) {
         (RunningThread->next)->prev = RunningThread->prev;
         ThreadList.count--;
     }else if(ThreadList.count == 1){
-        RunningThread = NULL; 
+        // RunningThread = NULL; 
+        RunningThread = idleThread;   //Make Sure to never call sleep on idle thread
+        ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
+
         ThreadList.count--;
     } 
     TCB_AddSleeping(thread);

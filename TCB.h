@@ -54,5 +54,6 @@ void TCB_UpdateSleeping(void);
 void TCB_RemoveSleepingNode(Tcb_t* thread);
 void TCB_AddSleeping(Tcb_t* node);
 void TCB_RemoveRunningAndSleep(void);
+void TCB_Configure_IdleThread(void);
 //void dummy(void); // Tests if function pointer set properly
 #endif /*__TCB_H__*/
