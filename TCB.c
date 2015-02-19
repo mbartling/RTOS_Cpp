@@ -7,7 +7,7 @@ Tcb_t* RunningThread = NULL;
 Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
 TcbListC_t SleepingList;
-
+//sleepListS_t SleepingList;
 void TCB_SetInitialStack(Tcb_t* pTcb)
 {
   int32_t* stack = pTcb->stack;
@@ -80,26 +80,43 @@ int TCB_threadListEmpty(void){
 
 void TCB_AddSleeping(Tcb_t* node)
 {
+  // sleepElem_t* elem = SleepingList.head;
+  Tcb_t* elem = SleepingList.head;
   if(SleepingList.count > 0){
-    node->next = SleepingThread;
-    node->prev = SleepingThread->prev;
-    node->prev->next = node;
-    SleepingThread->prev = node;
+    // node->next = SleepingThread;
+    // node->prev = SleepingThread->prev;
+    // node->prev->next = node;
+    // SleepingThread->prev = node;
+    while(elem->next != NULL){
+      elem = elem->next;
+    }
+    elem->next = node;
+    node->next = NULL;
+    node->prev = elem;
   }
   else {
     SleepingList.head = node;
-    SleepingThread = node;
+    // SleepingThread = node;
+    node->next = NULL;
+    node->prev = NULL;
   }
   SleepingList.count++;
 }
 
 void TCB_RemoveSleepingNode(Tcb_t* thread){
   if(SleepingList.count > 1){
-        (thread->prev)->next = thread->next;
-        (thread->next)->prev = thread->prev;
-        SleepingList.count--;
+      if(thread == SleepingList.head){
+        SleepingList.head = SleepingList.head->next;
+      }
+      (thread->prev)->next = thread->next;
+      (thread->next)->prev = thread->prev;
+      SleepingList.count--;
     }else if(SleepingList.count == 1){
-        SleepingThread = NULL; 
+			  // SleepingThread->next = NULL;
+				// SleepingThread->prev = NULL;
+        // SleepingThread = NULL; 
+        SleepingList.head->next = NULL;
+        SleepingList.head->prev = NULL;
         SleepingList.count--;
     } 
     thread->next = thread;
@@ -119,13 +136,21 @@ void TCB_RemoveSleepingNode(Tcb_t* thread){
 
 void TCB_UpdateSleeping(void) {
     Tcb_t* sleepingNode = SleepingList.head;
-    
+    if(sleepingNode == NULL){
+      return;
+    }
     while(sleepingNode->next != SleepingList.head){
+      // while(sleepingNode->next != NULL)
+			if(SleepingList.count == 0){
+				break;
+				}
       sleepingNode->state_sleep--;
 
       if(sleepingNode->state_sleep < 1){
+        Tcb_t* prev = sleepingNode->prev;
         TCB_RemoveSleepingNode(sleepingNode);
         TCB_InsertNodeBeforeRoot(sleepingNode);
+        sleepingNode = prev;
     }
     sleepingNode = sleepingNode->next;
   }

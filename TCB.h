@@ -19,6 +19,10 @@ typedef struct _Tcb {
   int32_t stack[STACKSIZE]; //!<Thread stack: OFFSET 32
 } Tcb_t;
 
+typedef struct _sleepElem{
+  struct _sleepElem* next;
+  Tcb_t* elem;
+} sleepElem_t;
 /**
  * @brief Doubly circular list
  * @details Modified from Martin Broadhursts online method
@@ -29,6 +33,12 @@ typedef struct _TcbListC
   Tcb_t* head;
   uint32_t count;  
 } TcbListC_t;
+
+typedef struct _sleepListS
+{
+  sleepElem_t* head;
+  uint32_t count;
+} sleepListS_t;
 
 //Tcb_t TcbTable[MAXNUMTHREADS];
 

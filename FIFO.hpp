@@ -1,7 +1,7 @@
 #ifndef __FIFO_HPP__
 #define __FIFO_HPP__
 
-#include "os.c"
+#include "os.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -77,7 +77,7 @@ public:
       // return(FAIL);
     
     while(nextPutPt == GetPt){
-      Wait();
+      this->Wait();
     }
   }
     else{
@@ -92,15 +92,15 @@ public:
       // return(FAIL);
     // }
     while(GetPt == PutPt){
-      Wait(); //Wait till available
+      this->Wait(); //Wait till available
     }
-    bWait();
+    this->bWait();
     *data = *(GetPt++);
     if(GetPt == &FifoData[Size]){
       GetPt = &FifoData[0];
     }
-    bSignal();
-    Signal();
+    this->bSignal();
+    this->Signal();
     return SUCCESS;
   }
 

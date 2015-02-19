@@ -28,7 +28,13 @@ void GPIOPortF_Handler(void);
 #endif
 
 int32_t ThreadCount = 0;
-
+Tcb_t idleThreadMem;
+Tcb_t* idleThread = &idleThreadMem;
+void Idle(void){
+  while(1){
+    //Idle
+  }
+}
  /********* OS_Init ************
  * initialize operating system, disable interrupts until OS_Launch
  * initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 
@@ -145,12 +151,37 @@ int OS_AddThread(void(*task)(void),
   return 1;
 }
 
+int AddIdleThread(void){
+
+  long status;
+  status = StartCritical();
+  // if(ThreadCount > (MAXNUMTHREADS - 1)){
+  if(!TCB_Available())
+  {
+    EndCritical(status);
+    return 0;
+  }
+
+  // Tcb_t* thread = &TcbTable[ThreadCount];
+  Tcb_t* thread = TCB_GetNewThread();
+  TCB_SetInitialStack(thread);  //Set thumb bit and dummy regs
+  thread->stack[STACKSIZE-2] = (int32_t) (task); //return to task
+  thread->priority = priority;
+  TCB_InsertNodeBeforeRoot(thread);
+
+  ThreadCount++;
+  EndCritical(status);
+  return 1;
+}
+
+
 //******** OS_Id *************** 
 // returns the thread ID for the currently running thread
 // Inputs: none
 // Outputs: Thread ID, number greater than zero 
 unsigned long OS_Id(void) {
-    ;
+	Tcb_t * runningThread = TCB_GetRunningThread();
+	return runningThread->id;
 }
 
 //******** OS_AddPeriodicThread *************** 
@@ -177,6 +208,7 @@ int OS_AddPeriodicThread(void(*task)(void),
    unsigned long period, unsigned long priority){
    GlobalPeriodicThread = task;
     Timer_Init((uint32_t)period);
+		return 1;
 }
 
 // ******** OS_Sleep ************
@@ -190,8 +222,9 @@ void OS_Sleep(unsigned long sleepTime) {
     Tcb_t * runningThread = TCB_GetRunningThread();
     runningThread-> state_sleep = sleepTime;
     TCB_RemoveRunningAndSleep();
+	  EndCritical(status);
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
-    EndCritical(status); 
+ 
 }
 
 // ******** OS_Kill ************
@@ -218,6 +251,13 @@ void OS_Kill(void) {
 // output: none
 void OS_Suspend(void)
 {
+	  long status = StartCritical();
+    Tcb_t * runningThread = TCB_GetRunningThread();
+    runningThread-> state_sleep = 0;
+    TCB_RemoveRunningAndSleep();
+  //  TCB_UpdateSleeping();
+    //If running list empty then insert idle task
+	  EndCritical(status);
   //This is where we would do any scheduling
   NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
