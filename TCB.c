@@ -7,6 +7,8 @@ Tcb_t* RunningThread = NULL;
 Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
 TcbListC_t SleepingList;
+Tcb_t DummyThread;
+
 //sleepListS_t SleepingList;
 Tcb_t* idleThread = NULL;
 
@@ -64,7 +66,7 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
   }
   else {
     ThreadList.head = node;  //<! Replace Idle Thread with node
-    RunningThread = node;    //<! Replace Idle Thread with node
+    RunningThread->next = node;    //<! Replace Idle Thread with node
   }
   ThreadList.count++;
 }
@@ -75,13 +77,17 @@ void TCB_RemoveRunningThread(void) {
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
-				RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
+				//RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
 																							// Location after context switching
+        DummyThread.sp = RunningThread->sp;
+        DummyThread.next = RunningThread->next;
+        RunningThread = &DummyThread;
 
         ThreadList.count--;
     }else if(ThreadList.count == 1){
         // RunningThread = NULL;
-        RunningThread = idleThread;   //Make Sure to never call sleep on idle thread
+      idleThread->next = idleThread;
+        RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
         ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
         ThreadList.count--;
     } 
@@ -89,21 +95,30 @@ void TCB_RemoveRunningThread(void) {
 }
 
 void TCB_RemoveRunningAndSleep(void) {
-    Tcb_t* thread = RunningThread;
+    // Tcb_t* thread = RunningThread;
+    DummyThread.sp = RunningThread->sp;
+    DummyThread.next = RunningThread->next;
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
-				RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
+				//RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
 																							// Location after context switching
+        // DummyThread.sp = RunningThread->sp;
+        // DummyThread.next = RunningThread->next;
+        // RunningThread = &DummyThread;
+       
         ThreadList.count--;
     }else if(ThreadList.count == 1){
         // RunningThread = NULL; 
-        RunningThread = idleThread;   //Make Sure to never call sleep on idle thread
+        RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
         ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
 
+        // RunningThread = &DummyThread;
         ThreadList.count--;
     } 
-    TCB_AddSleeping(thread);
+    TCB_AddSleeping(RunningThread);
+    RunningThread = &DummyThread;
+
 }
 Tcb_t* TCB_GetRunningThread(void){
   return RunningThread;
@@ -176,11 +191,11 @@ void TCB_UpdateSleeping(void) {
     if(sleepingNode == NULL){
       return;
     }
-    while(sleepingNode->next != SleepingList.head){
-      // while(sleepingNode->next != NULL)
-			if(SleepingList.count == 0){
-				break;
-				}
+    //while(sleepingNode->next != SleepingList.head){
+    while(sleepingNode->next != NULL){
+			// if(SleepingList.count == 0){
+			// 	break;
+			// 	}
       sleepingNode->state_sleep--;
 
       if(sleepingNode->state_sleep < 1){
@@ -199,9 +214,9 @@ void TCB_CheckSleeping(void) {
     }
     while(sleepingNode->next != SleepingList.head){
       // while(sleepingNode->next != NULL)
-      if(SleepingList.count == 0){
-        break;
-        }
+      // if(SleepingList.count == 0){
+      //   break;
+      //   }
       // sleepingNode->state_sleep--;
 
       if(sleepingNode->state_sleep < 1){

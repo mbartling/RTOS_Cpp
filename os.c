@@ -9,7 +9,7 @@
 #include "Switch.h"
 #include "Timer.h"
 #define STACKSIZE 100
-#define SYSTICK_EN 0  
+#define SYSTICK_EN 1  
 #ifdef __cplusplus
 extern "C" {
 #endif
