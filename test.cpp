@@ -4,6 +4,8 @@
 //#include "ADC.h"
 //#include "UART2.h"
 #include <string.h> 
+
+#define TESTMAIN 1
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 void cr4_fft_64_stm32(void *pssOUT, void *pssIN, unsigned short Nbin);
 //*********Prototype for PID in PID_stm32.s, STMicroelectronics
@@ -307,11 +309,14 @@ void PortE_Init(void){ unsigned long volatile delay;
 // no switch interrupts
 // no ADC serial port or LCD output
 // no calls to semaphores
+
 unsigned long Count1;   // number of times thread1 loops
 unsigned long Count2;   // number of times thread2 loops
 unsigned long Count3;   // number of times thread3 loops
 unsigned long Count4;   // number of times thread4 loops
 unsigned long Count5;   // number of times thread5 loops
+
+#if TESTMAIN == 1
 void Thread1(void){
   Count1 = 0;          
   for(;;){
@@ -337,7 +342,9 @@ void Thread3(void){
   }
 }
 
-int Testmain1(void){  // Testmain1
+//int Testmain1(void){  // Testmain1
+int main(void){  // Testmain1
+
   OS_Init();          // initialize, disable interrupts
   PortE_Init();       // profile user threads
   NumCreated = 0 ;
@@ -348,7 +355,7 @@ int Testmain1(void){  // Testmain1
   OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
   return 0;            // this never executes
 }
-
+#endif
 //*******************Second TEST**********
 // Once the initalize test runs, test this (Lab 1 part 1)
 // no UART interrupts
@@ -357,6 +364,8 @@ int Testmain1(void){  // Testmain1
 // no switch interrupts
 // no ADC serial port or LCD output
 // no calls to semaphores
+#if TESTMAIN == 2
+
 void Thread1b(void){
   Count1 = 0;          
   for(;;){
@@ -378,7 +387,8 @@ void Thread3b(void){
     Count3++;
   }
 }
-int Testmain2(void){  // Testmain2
+//int Testmain2(void){  // Testmain2
+int main(void){  // Testmain2
   OS_Init();           // initialize, disable interrupts
   PortE_Init();       // profile user threads
   NumCreated = 0 ;
@@ -391,7 +401,7 @@ int Testmain2(void){  // Testmain2
   OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
   return 0;            // this never executes
 }
-
+#endif
 //*******************Third TEST**********
 // Once the second test runs, test this (Lab 1 part 2)
 // no UART1 interrupts
@@ -400,6 +410,8 @@ int Testmain2(void){  // Testmain2
 // PortF GPIO interrupts, active low
 // no ADC serial port or LCD output
 // tests the spinlock semaphores, tests Sleep and Kill
+#if TESTMAIN == 3
+
 Sema4Type Readyc;        // set in background
 int Lost;
 void BackgroundThread1c(void){   // called at 1000 Hz
@@ -456,7 +468,7 @@ int main(void){   // Testmain3
   OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
   return 0;            // this never executes
 }
-
+#endif
 //*******************Fourth TEST**********
 // Once the third test runs, run this example (Lab 1 part 2)
 // Count1 should exactly equal Count2

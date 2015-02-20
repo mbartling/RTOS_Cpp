@@ -31,7 +31,9 @@ int32_t ThreadCount = 0;
 // Tcb_t idleThreadMem;
 // Tcb_t* idleThread = &idleThreadMem;
 
-
+inline void Context_Switch(void){
+    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+}
  /********* OS_Init ************
  * initialize operating system, disable interrupts until OS_Launch
  * initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 
@@ -149,28 +151,28 @@ int OS_AddThread(void(*task)(void),
   return 1;
 }
 
-int AddIdleThread(void){
+// int AddIdleThread(void){
 
-  long status;
-  status = StartCritical();
-  // if(ThreadCount > (MAXNUMTHREADS - 1)){
-  if(!TCB_Available())
-  {
-    EndCritical(status);
-    return 0;
-  }
+//   long status;
+//   status = StartCritical();
+//   // if(ThreadCount > (MAXNUMTHREADS - 1)){
+//   if(!TCB_Available())
+//   {
+//     EndCritical(status);
+//     return 0;
+//   }
 
-  // Tcb_t* thread = &TcbTable[ThreadCount];
-  Tcb_t* thread = TCB_GetNewThread();
-  TCB_SetInitialStack(thread);  //Set thumb bit and dummy regs
-  thread->stack[STACKSIZE-2] = (int32_t) (task); //return to task
-  thread->priority = priority;
-  TCB_InsertNodeBeforeRoot(thread);
+//   // Tcb_t* thread = &TcbTable[ThreadCount];
+//   Tcb_t* thread = TCB_GetNewThread();
+//   TCB_SetInitialStack(thread);  //Set thumb bit and dummy regs
+//   thread->stack[STACKSIZE-2] = (int32_t) (task); //return to task
+//   thread->priority = priority;
+//   TCB_InsertNodeBeforeRoot(thread);
 
-  ThreadCount++;
-  EndCritical(status);
-  return 1;
-}
+//   ThreadCount++;
+//   EndCritical(status);
+//   return 1;
+// }
 
 
 //******** OS_Id *************** 
@@ -221,7 +223,8 @@ void OS_Sleep(unsigned long sleepTime) {
     runningThread-> state_sleep = sleepTime;
     TCB_RemoveRunningAndSleep();
 	  EndCritical(status);
-    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    Context_Switch();
+//    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
  
 }
 
@@ -233,9 +236,13 @@ void OS_Kill(void) {
     long status = StartCritical();
     TCB_RemoveRunningThread();
     //if TCB_ThreadList is not empty after removing the current thread, context switch
-    if  (TCB_threadListEmpty != 0) {
-        OS_Suspend(); 
-    } 
+    // if(TCB_threadListEmpty != 0) {
+        // OS_Suspend(); 
+    // }
+    Context_Switch();
+
+    // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+
     EndCritical(status); 
 }
 
@@ -254,10 +261,12 @@ void OS_Suspend(void)
     runningThread-> state_sleep = 0;
     TCB_RemoveRunningAndSleep();
   //  TCB_UpdateSleeping();
+    // TCB_CheckSleeping();
     //If running list empty then insert idle task
 	  EndCritical(status);
   //This is where we would do any scheduling
-  NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    Context_Switch();
+  // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
 
 //******** OS_Launch *************** 
@@ -338,7 +347,8 @@ void SysTick_Handler(void){
     status = StartCritical();
     TCB_UpdateSleeping();
     EndCritical(status);
-    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    Context_Switch();
+    // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
 }
 

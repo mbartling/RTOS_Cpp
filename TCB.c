@@ -75,6 +75,9 @@ void TCB_RemoveRunningThread(void) {
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
+				RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
+																							// Location after context switching
+
         ThreadList.count--;
     }else if(ThreadList.count == 1){
         // RunningThread = NULL;
@@ -90,6 +93,8 @@ void TCB_RemoveRunningAndSleep(void) {
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
+				RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
+																							// Location after context switching
         ThreadList.count--;
     }else if(ThreadList.count == 1){
         // RunningThread = NULL; 
@@ -146,8 +151,9 @@ void TCB_RemoveSleepingNode(Tcb_t* thread){
 			  // SleepingThread->next = NULL;
 				// SleepingThread->prev = NULL;
         // SleepingThread = NULL; 
-        SleepingList.head->next = NULL;
-        SleepingList.head->prev = NULL;
+        // SleepingList.head->next = NULL;
+        // SleepingList.head->prev = NULL;
+				SleepingList.head = NULL;
         SleepingList.count--;
     } 
     thread->next = thread;
@@ -176,6 +182,27 @@ void TCB_UpdateSleeping(void) {
 				break;
 				}
       sleepingNode->state_sleep--;
+
+      if(sleepingNode->state_sleep < 1){
+        Tcb_t* prev = sleepingNode->prev;
+        TCB_RemoveSleepingNode(sleepingNode);
+        TCB_InsertNodeBeforeRoot(sleepingNode);
+        sleepingNode = prev;
+    }
+    sleepingNode = sleepingNode->next;
+  }
+}
+void TCB_CheckSleeping(void) {
+    Tcb_t* sleepingNode = SleepingList.head;
+    if(sleepingNode == NULL){
+      return;
+    }
+    while(sleepingNode->next != SleepingList.head){
+      // while(sleepingNode->next != NULL)
+      if(SleepingList.count == 0){
+        break;
+        }
+      // sleepingNode->state_sleep--;
 
       if(sleepingNode->state_sleep < 1){
         Tcb_t* prev = sleepingNode->prev;
