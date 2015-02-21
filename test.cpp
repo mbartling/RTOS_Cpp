@@ -349,8 +349,8 @@ int main(void){  // Testmain1
   PortE_Init();       // profile user threads
   NumCreated = 0 ;
   NumCreated += OS_AddThread(&Thread1,128,1); 
-  //NumCreated += OS_AddThread(&Thread2,128,2); 
-  //NumCreated += OS_AddThread(&Thread3,128,3); 
+  NumCreated += OS_AddThread(&Thread2,128,2); 
+  NumCreated += OS_AddThread(&Thread3,128,3); 
   // Count1 Count2 Count3 should be equal or off by one at all times
   OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
   return 0;            // this never executes

@@ -44,6 +44,8 @@ void OS_Init(void)
 {
   DisableInterrupts();
   PLL_Init();
+  NVIC_SYS_PRI3_R = (NVIC_SYS_PRI3_R& ~NVIC_SYS_PRI3_PENDSV_M)|0x00E00000; // priority 6
+
 #ifdef SYSTICK_EN
   SysTick_Init(160000); //2 Ms period default
 #endif
@@ -280,10 +282,12 @@ void OS_Suspend(void)
 void OS_Launch(unsigned long theTimeSlice)
 {
 #ifdef SYSTICK_EN
+	
   NVIC_ST_RELOAD_R = theTimeSlice - 1;
+	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
   NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
 #endif
-  EnableInterrupts();
+  //EnableInterrupts();
   StartOS();
 }
 
@@ -343,12 +347,14 @@ void SysTick_Handler(void){
         }while(possibleSleepingThread != runningThread);
     } 
     */
-    long status;
-    status = StartCritical();
+    //long status;
+    //status = StartCritical();
+		DisableInterrupts();
     TCB_UpdateSleeping();
-    EndCritical(status);
-    Context_Switch();
-    // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+		EnableInterrupts();
+    //EndCritical(status);
+    //Context_Switch();
+    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
 }
 

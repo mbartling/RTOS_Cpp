@@ -87,10 +87,10 @@ public:
   // }
   class iterator {
   private:
-    Cell* position = NULL;
+    Cell* position;
     friend class List;
   public:
-    iterator(void) {}
+    iterator(void) : position(NULL) {}
     iterator(Cell* p) : position(p) {}
 
     T& operator*(void) {return position->data;}
@@ -144,7 +144,7 @@ public:
 //   }
 // }
   void clean(void){
-    for(Cell* iter = head(); iter->next != head(); iter = iter->next){
+    for(Cell* iter = head(); iter->next != dummy; iter = iter->next){
       if(iter->deleteMe){
         remove(iter);
       }
@@ -159,11 +159,13 @@ private:
     newCell->next = location->next;
     location->next->prev = newCell;
     location->next = newCell;
+    count++;
   }
   void remove(Cell* p){
     p->prev->next = p->next;
     p->next->prev = p->prev;
     storage.free(p);
+    count--;
   }
 
 };

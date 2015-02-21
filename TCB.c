@@ -16,9 +16,9 @@ Tcb_t DummyThread;
 
 //sleepListS_t SleepingList;
 Tcb_t* idleThread = NULL;
+uint32_t idleTime = 0;
 
 void Idle(void){
-  uint32_t idleTime;
   while(1){
     //Idle
     idleTime++;
@@ -37,7 +37,7 @@ void TCB_Configure_IdleThread(void){
   idleTask = Idle;
   idleThread = TCB_GetNewThread();
   TCB_SetInitialStack(idleThread);
-  // idleThread->stack[STACKSIZE-2] = (int32_t) (Idle); //return to IDLE
+  idleThread->stack[STACKSIZE-2] = (int32_t) (Idle); //return to IDLE
   // idleThread->stack[STACKSIZE-2] = Idle; //return to IDLE
   ThreadList.head = idleThread;
   RunningThread = idleThread;
@@ -50,6 +50,21 @@ void TCB_SetInitialStack(Tcb_t* pTcb)
   pTcb->sp = &stack[STACKSIZE - 16];
   stack[STACKSIZE-1] = 0x01000000; // Set Thumb bit
   //Rest of stack registers are currently random
+  stack[STACKSIZE - 3]  = 0x14141414;
+  stack[STACKSIZE - 4]  = 0x12121212;
+  stack[STACKSIZE - 5]  = 0x03030303;
+  stack[STACKSIZE - 6]  = 0x02020202;
+  stack[STACKSIZE - 7]  = 0x01010101;
+  stack[STACKSIZE - 8]  = 0x00000000;
+  stack[STACKSIZE - 9]  = 0x11111111;
+  stack[STACKSIZE - 10] = 0x10101010;
+  stack[STACKSIZE - 11] = 0x09090909;
+  stack[STACKSIZE - 12] = 0x08080808;
+  stack[STACKSIZE - 13] = 0x07070707;
+  stack[STACKSIZE - 14] = 0x06060606;
+  stack[STACKSIZE - 15] = 0x05050505;
+  stack[STACKSIZE - 16] = 0x04040404;
+
 }
 
 int TCB_Available(void){
@@ -64,19 +79,24 @@ Tcb_t* TCB_GetNewThread(void){
   return thread;
 }
 
+
 void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 {
   if(ThreadList.count > 0){
     node->next = (RunningThread->next)->prev; //!< NOTE: This should fix a lot of problems
-    node->prev = RunningThread->prev;
+    //node->prev = RunningThread->prev;
+		node->prev = RunningThread->next->prev->prev;
     node->prev->next = node;
-    RunningThread->prev = node;
+    // RunningThread->prev = node;
+    RunningThread->next->prev->prev = node;
   }
   else {
     ThreadList.head = node;  //<! Replace Idle Thread with node
     // RunningThread->next = node;    //<! Replace Idle Thread with node
     // RunningThread->prev = node;    //<! Replace Idle Thread with node
-    RunningThread = node;
+    //RunningThread = node;
+		RunningThread->next = node;
+		//RunningThread->prev = node;
   }
   ThreadList.count++;
 }
