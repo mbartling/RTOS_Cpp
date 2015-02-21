@@ -144,7 +144,7 @@ public:
 //   }
 // }
   void clean(void){
-    for(Cell* iter = head(); iter->next != dummy; iter = iter->next){
+    for(Cell* iter = head(); iter->next != head(); iter = iter->next){
       if(iter->deleteMe){
         remove(iter);
       }

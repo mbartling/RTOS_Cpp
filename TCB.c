@@ -84,11 +84,12 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 {
   if(ThreadList.count > 0){
     node->next = (RunningThread->next)->prev; //!< NOTE: This should fix a lot of problems
-    //node->prev = RunningThread->prev;
-		node->prev = RunningThread->next->prev->prev;
+		//node->next = RunningThread;
+    node->prev = RunningThread->prev;
+		//node->prev = RunningThread->next->prev->prev;
     node->prev->next = node;
-    // RunningThread->prev = node;
-    RunningThread->next->prev->prev = node;
+    RunningThread->prev = node;
+    //RunningThread->next->prev->prev = node;
   }
   else {
     ThreadList.head = node;  //<! Replace Idle Thread with node
@@ -96,7 +97,7 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
     // RunningThread->prev = node;    //<! Replace Idle Thread with node
     //RunningThread = node;
 		RunningThread->next = node;
-		//RunningThread->prev = node;
+		RunningThread->prev = node;
   }
   ThreadList.count++;
 }
@@ -333,7 +334,10 @@ void TCB_UpdateSleeping(void) {
       
       // iter = SleepingList2.erase(iter);
       iter.mark4Delete();
+			Tcb_t* runningTemp = RunningThread;
+			RunningThread = RunningThread->next;
       TCB_InsertNodeBeforeRoot(thread);
+			RunningThread = runningTemp;
       
 
     }
