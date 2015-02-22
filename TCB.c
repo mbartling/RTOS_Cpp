@@ -14,6 +14,20 @@ TcbListC_t ThreadList;
 TcbListC_t SleepingList;
 Tcb_t DummyThread;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+//comment the following line to deactivate Systick
+void DisableInterrupts(void); // Disable interrupts
+void EnableInterrupts(void);  // Enable interrupts
+long StartCritical (void);    // previous I bit, disable interrupts
+void EndCritical(long sr);    // restore I bit to previous value
+void WaitForInterrupt(void);  // low power mode
+// void PendSV_Handler(void);
+#ifdef __cplusplus
+}
+#endif
+
 //sleepListS_t SleepingList;
 Tcb_t* idleThread = NULL;
 uint32_t idleTime = 0;
@@ -82,14 +96,25 @@ Tcb_t* TCB_GetNewThread(void){
 
 void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 {
+  long status;
+  status = StartCritical();
+  Tcb_t* thread = RunningThread->next->prev;
+
   if(ThreadList.count > 0){
+    /*
+    node->prev = RunningThread->prev;
+
     node->next = (RunningThread->next)->prev; //!< NOTE: This should fix a lot of problems
 		//node->next = RunningThread;
-    node->prev = RunningThread->prev;
 		//node->prev = RunningThread->next->prev->prev;
     node->prev->next = node;
-    RunningThread->prev = node;
-    //RunningThread->next->prev->prev = node;
+    //RunningThread->prev = node;
+    RunningThread->next->prev->prev = node;
+    */
+    node->next = thread;
+    node->prev = thread->prev;
+    thread->prev = node;
+    node->prev->next = node;
   }
   else {
     ThreadList.head = node;  //<! Replace Idle Thread with node
@@ -100,6 +125,8 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 		RunningThread->prev = node;
   }
   ThreadList.count++;
+  EndCritical(status);
+
 }
 
 void TCB_RemoveThread(Tcb_t* thread){
@@ -167,14 +194,17 @@ void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
 }
 void TCB_RemoveRunningThread(void) {
     Tcb_t* thread = RunningThread;
+		if(ThreadList.count == 0){
+			return;
+		}
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
 				//RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
 																							// Location after context switching
-        // DummyThread.sp = RunningThread->sp;
-        // DummyThread.next = RunningThread->next;
-        // RunningThread = &DummyThread;
+       // DummyThread.sp = RunningThread->sp;
+       // DummyThread.next = RunningThread->next;
+        //RunningThread = &DummyThread;
 
         ThreadList.count--;
     }else if(ThreadList.count == 1){
@@ -182,9 +212,12 @@ void TCB_RemoveRunningThread(void) {
       idleThread->next = idleThread;
         RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
         ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
+			  //DummyThread.sp = RunningThread->sp;
+        //DummyThread.next = RunningThread->next;
         ThreadList.count--;
     } 
     ThreadPool.free(thread);
+		//RunningThread = &DummyThread;
 }
 
 void TCB_RemoveRunningAndSleep(void) {
@@ -334,10 +367,10 @@ void TCB_UpdateSleeping(void) {
       
       // iter = SleepingList2.erase(iter);
       iter.mark4Delete();
-			Tcb_t* runningTemp = RunningThread;
-			RunningThread = RunningThread->next;
+			//Tcb_t* runningTemp = RunningThread;
+			//RunningThread = RunningThread->next;
       TCB_InsertNodeBeforeRoot(thread);
-			RunningThread = runningTemp;
+			//RunningThread = runningTemp;
       
 
     }

@@ -64,12 +64,14 @@ void OS_Init(void)
 // the following defintion is suitable for coopeartive semaphores
 void OS_Wait(Sema4Type *semaPt) {
     DisableInterrupts();
-    while((semaPt->Value) <= 0){
+    //while(__ldrex(&(semaPt->Value)) <= 0){
+		while(semaPt->Value <= 0){
         EnableInterrupts();
         OS_Suspend();
         DisableInterrupts();
     }
     (semaPt->Value) = (semaPt->Value) - 1;
+		//while(!__strex(__ldrex(&(semaPt->Value)) - 1, &(semaPt->Value))){}
     EnableInterrupts();
 }
 
@@ -284,7 +286,7 @@ void OS_Launch(unsigned long theTimeSlice)
 #ifdef SYSTICK_EN
 	
   NVIC_ST_RELOAD_R = theTimeSlice - 1;
-	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
+//	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
   NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
 #endif
   //EnableInterrupts();
@@ -347,12 +349,12 @@ void SysTick_Handler(void){
         }while(possibleSleepingThread != runningThread);
     } 
     */
-    //long status;
-    //status = StartCritical();
-		DisableInterrupts();
+    long status;
+    status = StartCritical();
+		//DisableInterrupts();
     TCB_UpdateSleeping();
-		EnableInterrupts();
-    //EndCritical(status);
+		//EnableInterrupts();
+    EndCritical(status);
     //Context_Switch();
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
