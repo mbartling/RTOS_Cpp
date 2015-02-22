@@ -260,6 +260,7 @@ void OS_Kill(void) {
 // output: none
 void OS_Suspend(void)
 {
+		
 	  long status = StartCritical();
     Tcb_t * runningThread = TCB_GetRunningThread();
     runningThread-> state_sleep = 0;
@@ -269,6 +270,7 @@ void OS_Suspend(void)
     //If running list empty then insert idle task
 	  EndCritical(status);
   //This is where we would do any scheduling
+	
     Context_Switch();
   // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
@@ -322,7 +324,8 @@ int OS_AddSW1Task(void(*task)(void), unsigned long priority) {
  */
 void GPIOPortF_Handler(void) {
     GPIO_PORTF_ICR_R = 0x01; //acknowlegement
-    OS_AddThread(SW1GlobalTask, STACKSIZE, SW1GlobalTaskPriority); //Note that the thread will kill itself after implemention (thus make sure the the function has OS_Kill in it)
+    //OS_AddThread(SW1GlobalTask, STACKSIZE, SW1GlobalTaskPriority); //Note that the thread will kill itself after implemention (thus make sure the the function has OS_Kill in it)
+		SW1GlobalTask();
     //fputc('o', stdout); //for debugging
 }
 

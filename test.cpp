@@ -454,6 +454,7 @@ void Thread4c(void){ int i;
 }
 void BackgroundThread5c(void){   // called when Select button pushed
   NumCreated += OS_AddThread(&Thread4c,128,3); 
+	return;
 }
       
 int main(void){   // Testmain3

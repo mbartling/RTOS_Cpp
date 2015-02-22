@@ -126,8 +126,9 @@ public:
     return iterator(head());
   }
   iterator end(void){
-    iterator result(this->tail());
-    ++result;
+    //iterator result(this->tail());
+    //++result;
+    iterator result(dummy);
     return result;
   }
   iterator erase(iterator pos){

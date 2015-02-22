@@ -156,6 +156,8 @@ void TCB_RemoveThread(Tcb_t* thread){
 }
 void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
     // Tcb_t* thread = RunningThread;
+	  long status;
+  status = StartCritical();
     if(ThreadList.count > 1){
         (thread->prev)->next = thread->next;
         (thread->next)->prev = thread->prev;
@@ -190,11 +192,17 @@ void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
     SleepingList2.push_back(thread);
     //SleepingList2.Add(thread);
     thread = &DummyThread;
+		EndCritical(status);
+
 
 }
 void TCB_RemoveRunningThread(void) {
+		  long status;
+  status = StartCritical();
     Tcb_t* thread = RunningThread;
 		if(ThreadList.count == 0){
+			EndCritical(status);
+
 			return;
 		}
     if(ThreadList.count > 1){
@@ -218,12 +226,16 @@ void TCB_RemoveRunningThread(void) {
     } 
     ThreadPool.free(thread);
 		//RunningThread = &DummyThread;
+		EndCritical(status);
+
 }
 
 void TCB_RemoveRunningAndSleep(void) {
     // Tcb_t* thread = RunningThread;
     // DummyThread.sp = RunningThread->sp;
     // DummyThread.next = RunningThread->next;
+			  long status;
+  status = StartCritical();
     if(ThreadList.count > 1){
         (RunningThread->prev)->next = RunningThread->next;
         (RunningThread->next)->prev = RunningThread->prev;
@@ -247,6 +259,8 @@ void TCB_RemoveRunningAndSleep(void) {
     SleepingList2.push_back(RunningThread);
     // SleepingList2.Add(RunningThread);
     // RunningThread = &DummyThread;
+				EndCritical(status);
+
 
 }
 Tcb_t* TCB_GetRunningThread(void){
