@@ -210,8 +210,11 @@ void (*GlobalPeriodicThread)(void);
 unsigned long GlobalPeriodicThreadPriority;
 int OS_AddPeriodicThread(void(*task)(void), 
    unsigned long period, unsigned long priority){
+	 long status = StartCritical();
+ 
    GlobalPeriodicThread = task;
     Timer_Init((uint32_t)period);
+	 EndCritical(status);
 		return 1;
 }
 
@@ -239,6 +242,7 @@ void OS_Sleep(unsigned long sleepTime) {
 void OS_Kill(void) {
     long status = StartCritical();
     TCB_RemoveRunningThread();
+		ThreadCount--;
     //if TCB_ThreadList is not empty after removing the current thread, context switch
     // if(TCB_threadListEmpty != 0) {
         // OS_Suspend(); 

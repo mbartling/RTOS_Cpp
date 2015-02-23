@@ -5,7 +5,7 @@
 //#include "UART2.h"
 #include <string.h> 
 
-#define TESTMAIN 1
+#define TESTMAIN 4
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 void cr4_fft_64_stm32(void *pssOUT, void *pssIN, unsigned short Nbin);
 //*********Prototype for PID in PID_stm32.s, STMicroelectronics
@@ -434,7 +434,7 @@ void Thread2c(void){
   Count2 = 0;    
   Count5 = 0;    // Count2 + Count5 should equal Count1  
   NumCreated += OS_AddThread(&Thread5c,128,3); 
-  OS_AddPeriodicThread(&BackgroundThread1c,TIME_1MS,0); 
+  OS_AddPeriodicThread(&BackgroundThread1c,TIME_2MS,0); 
   for(;;){
     OS_Wait(&Readyc);
     Count2++;   // Count2 + Count5 should equal Count1
@@ -486,6 +486,7 @@ int main(void){   // Testmain3
 // Select switch interrupts, active low
 // no ADC serial port or LCD output
 // tests the spinlock semaphores, tests Sleep and Kill
+#if TESTMAIN == 4
 Sema4Type Readyd;        // set in background
 void BackgroundThread1d(void){   // called at 1000 Hz
 static int i=0;
@@ -521,7 +522,8 @@ void Thread4d(void){ int i;
 void BackgroundThread5d(void){   // called when Select button pushed
   NumCreated += OS_AddThread(&Thread4d,128,3); 
 }
-int Testmain4(void){   // Testmain4
+int main(void){   // Testmain4
+	//int Testmain4(void){   // Testmain4
   Count4 = 0;          
   OS_Init();           // initialize, disable interrupts
   NumCreated = 0 ;
@@ -533,7 +535,7 @@ int Testmain4(void){   // Testmain4
   OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
   return 0;            // this never executes
 }
-
+#endif
 ////******************* Lab 3 Preparation 2**********
 //// Modify this so it runs with your RTOS (i.e., fix the time units to match your OS)
 //// run this with 
