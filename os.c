@@ -8,8 +8,9 @@
 #include "inc/tm4c123gh6pm.h"
 #include "Switch.h"
 #include "Timer.h"
+#include "priority.h"
 #define STACKSIZE 100
-#define SYSTICK_EN 1  
+//#define SYSTICK_EN 1  
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,12 +24,10 @@ void StartOS(void);
 void ContextSwitch(void);
 void GPIOPortF_Handler(void);
 // void PendSV_Handler(void);
-void Timer0A_Handler(void);
-	
 #ifdef __cplusplus
 }
 #endif
-unsigned long Time = 0;
+unsigned long systemTime= 0;
 int32_t ThreadCount = 0;
 // Tcb_t idleThreadMem;
 // Tcb_t* idleThread = &idleThreadMem;
@@ -44,13 +43,14 @@ inline void Context_Switch(void){
  */
 void OS_Init(void)
 {
+  int Timer1APeriod = 80; //80*12.5 = 1us 
   DisableInterrupts();
   PLL_Init();
-  NVIC_SYS_PRI3_R = (NVIC_SYS_PRI3_R& ~NVIC_SYS_PRI3_PENDSV_M)|0x00E00000; // priority 6
-
+  NVIC_SYS_PRI3_R = (NVIC_SYS_PRI3_R& ~NVIC_SYS_PRI3_PENDSV_M)|PendSVPriority; // priority 6
 #ifdef SYSTICK_EN
   SysTick_Init(160000); //2 Ms period default
 #endif
+  Timer1A_Init((uint32_t)Timer1APeriod);
   UART0_Init();
   TCB_Configure_IdleThread(); //Set up the idle thread
 }
@@ -214,7 +214,7 @@ int OS_AddPeriodicThread(void(*task)(void),
         unsigned long period, unsigned long priority){
     long status = StartCritical();
     GlobalPeriodicThread = task;
-    Timer_Init((uint32_t)period);
+    Timer0A_Init((uint32_t)period);
     EndCritical(status);
     return 1;
 }
@@ -251,9 +251,9 @@ void OS_Kill(void) {
 	
 	
     EndCritical(status); 
-    //Context_Switch();
+    Context_Switch();
 
-    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
 }
 
@@ -345,41 +345,51 @@ void Timer0A_Handler(void) {
     GlobalPeriodicThread();
 }
 
+void Timer1A_Handler(void) {
+    systemTime++; 
+    TIMER1_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
+    GlobalPeriodicThread();
+}
+
 void SysTick_Handler(void){
-    /* 
-    Tcb_t* runningThread =  TCB_GetRunningThread();
-    Tcb_t* possibleSleepingThread = runningThread;
-    // decrementing threads with state_sleep > 1 
-    if (possibleSleepingThread != NULL) { //enter ony if there is at least one thread 
-        do {
-            if (possibleSleepingThread->state_sleep > 1) {
-                (possibleSleepingThread->state_sleep) -= 1 ;
-            }
-            possibleSleepingThread = possibleSleepingThread ->next;
-        }while(possibleSleepingThread != runningThread);
-    } 
-    */
     long status;
     status = StartCritical();
-		//DisableInterrupts();
+    //DisableInterrupts();
     TCB_UpdateSleeping();
-		//EnableInterrupts();
+    //EnableInterrupts();
     EndCritical(status);
     //Context_Switch();
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
-    Time++;
 }
 
 
 unsigned long OS_Time() {
-    return Time;
+    return systemTime;
 }
 
 unsigned long OS_TimeDifference(unsigned long start, unsigned long stop) {
     return stop - start;
 }
 
+ /********* OS_ClearMsTime ************
+ * sets the system time to zero (from Lab 1)
+ * Inputs:  none
+ * Outputs: none
+ * You are free to change how this works
+ */
+void OS_ClearMsTime(void) {
+    systemTime = 0;
+}
 
-
+ /********* OS_MsTime ************
+ * reads the current time in msec (from Lab 1)
+ * Inputs:  none
+ * Outputs: time in ms units
+ * You are free to select the time resolution for this function
+ * It is ok to make the resolution to match the first call to OS_AddPeriodicThread
+ */
+unsigned long OS_MsTime(void) {
+   return 1;
+}
 
 

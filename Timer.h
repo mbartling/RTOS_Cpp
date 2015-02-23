@@ -38,16 +38,21 @@
 #ifndef __TIMER_H__// do not include more than once
 #define __TIMER_H__
 
-void Timer_Init(uint32_t period);
+void Timer0A_Init(uint32_t period);
 // high is number of clock cycles output is high ((1/clockfreq) units)
 // duty cycle = high/period
 // assumes that period>high>(approx 3) and Timer0A PWM initialized
 void PWM_Duty(uint16_t high);
 
+void Timer1A_Init(uint32_t period);
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 void Timer0A_Handler(void);
+void Timer1A_Handler(void);
 #ifdef __cplusplus
 }
 #endif

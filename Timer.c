@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include "inc/tm4c123gh6pm.h"
 #include "Timer.h"
-#include "Timer.h"
+#include "Priority.h"
 //#define TIMER_MR_TACDIR                  0x1         //determining the direction of the counter (in this case up)
 #define TIMER_MR_MR                      0x2 //timer mode (periodic)
 #define TIMER_CFG_16_BIT        0x00000004  // 16-bit timer configuration,
@@ -54,7 +54,7 @@
 // high is number of clock cycles output is high ((1/clockfreq) units)
 // duty cycle = high/period
 // assumes that period>high>(approx 3)
-void Timer_Init(uint32_t period){
+void Timer0A_Init(uint32_t period){
   volatile unsigned long delay;
   SYSCTL_RCGCTIMER_R |= 0x01;      // activate timer0
   TIMER0_CTL_R &= ~TIMER_CTL_TAEN; // disable timer0A during setup
@@ -64,8 +64,23 @@ void Timer_Init(uint32_t period){
   //TIMER0_TAMATCHR_R = period-high-1; // duty cycle = high/period
   TIMER0_CTL_R |= TIMER_CTL_TAEN;  // enable timer0A 16-b (this step is needed to enable the timer (do right before wanting the timer 
   TIMER0_IMR_R  = 0x1;
-  NVIC_PRI4_R = (0x1<<29); 
+  NVIC_PRI4_R = Timer0APriority;
   NVIC_EN0_R =  1 <<19;
+}
+
+void Timer1A_Init(uint32_t period){
+  volatile unsigned long delay;
+  SYSCTL_RCGCTIMER_R |= 0x02;      // activate timer1    
+  TIMER1_CTL_R &= ~TIMER_CTL_TAEN; // disable timer1A during setup
+  TIMER1_CFG_R = 0x00000000;       //32 bit timer configuration
+  TIMER1_TAMR_R = (TIMER_TAMR_TAMR_PERIOD); //condfgure the timer as a periodic timer
+  TIMER1_TAILR_R = period - 1;       // timer start value (when ever timer gets to zero, it reloads this value)
+  //TIMER0_TAMATCHR_R = period-high-1; // duty cycle = high/period
+  TIMER1_CTL_R |= TIMER_CTL_TAEN;  // enable timer0A 16-b (this step is needed to enable the timer (do right before wanting the timer 
+  TIMER1_IMR_R  = 0x1;
+  //NVIC_PRI5_R = (0x1<<13); 
+  NVIC_PRI5_R = Timer1APriority;
+  NVIC_EN0_R =  1 <<23;
 }
 
 
