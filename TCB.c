@@ -117,7 +117,7 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 }
 
 void TCB_RemoveThread(Tcb_t* thread){
-  method_not_implemented.fail();
+  EX_method_not_implemented.fail();
 }
 void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
     // Tcb_t* thread = RunningThread;

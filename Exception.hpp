@@ -1,11 +1,22 @@
 #ifndef __EXCEPTION_HPP__
 #define __EXCEPTION_HPP__
 
+enum EXCEPTION_TYPES { method_not_implemented,
+                       NULLPTR_access,
+                           memory_not_valid,
+                           invalid_path,
+                           invalid_initialization,
+                           michael_too_awesome
+                          };
 class Exception {
-  int id;
+	
+	public:
+
+	private:
+  EXCEPTION_TYPES id;
 
 public:
-  Exception(int _id): id(_id) {}
+  Exception(EXCEPTION_TYPES _id): id(_id) {}
 
   void assert(bool condition, bool expected){
     if(condition == expected){
@@ -26,15 +37,9 @@ public:
   void fail(){
     ask_OS();
   }
-  enum EXCEPTION_TYPES = { method_not_implemented,
-                           NULLPTR_access,
-                           memory_not_valid,
-                           invalid_path,
-                           invalid_initialization,
-                           michael_too_awesome
-                          }
+
 };
 
-Exception method_not_implemented(Exception::method_not_implemented);
+Exception EX_method_not_implemented(method_not_implemented);
 
 #endif /*__EXCEPTION_HPP__*/
