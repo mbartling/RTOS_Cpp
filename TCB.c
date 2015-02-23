@@ -2,6 +2,7 @@
 #include "Pool.hpp"
 #include <stdio.h>
 #include "sleepList.hpp"
+#include "Exception.hpp"
 // #include <iostream>
 #define DEBUGprintf(...) /**/
 
@@ -52,7 +53,6 @@ void TCB_Configure_IdleThread(void){
   idleThread = TCB_GetNewThread();
   TCB_SetInitialStack(idleThread);
   idleThread->stack[STACKSIZE-2] = (int32_t) (Idle); //return to IDLE
-  // idleThread->stack[STACKSIZE-2] = Idle; //return to IDLE
   ThreadList.head = idleThread;
   RunningThread = idleThread;
 
@@ -64,20 +64,20 @@ void TCB_SetInitialStack(Tcb_t* pTcb)
   pTcb->sp = &stack[STACKSIZE - 16];
   stack[STACKSIZE-1] = 0x01000000; // Set Thumb bit
   //Rest of stack registers are currently random
-  stack[STACKSIZE - 3]  = 0x14141414;
-  stack[STACKSIZE - 4]  = 0x12121212;
-  stack[STACKSIZE - 5]  = 0x03030303;
-  stack[STACKSIZE - 6]  = 0x02020202;
-  stack[STACKSIZE - 7]  = 0x01010101;
-  stack[STACKSIZE - 8]  = 0x00000000;
-  stack[STACKSIZE - 9]  = 0x11111111;
-  stack[STACKSIZE - 10] = 0x10101010;
-  stack[STACKSIZE - 11] = 0x09090909;
-  stack[STACKSIZE - 12] = 0x08080808;
-  stack[STACKSIZE - 13] = 0x07070707;
-  stack[STACKSIZE - 14] = 0x06060606;
-  stack[STACKSIZE - 15] = 0x05050505;
-  stack[STACKSIZE - 16] = 0x04040404;
+  stack[STACKSIZE - 3]  = 0x14141414;  //<! R14 Dummy Value for Debugging 
+  stack[STACKSIZE - 4]  = 0x12121212;  //<! R12 Dummy Value for Debugging
+  stack[STACKSIZE - 5]  = 0x03030303;  //<! R03 Dummy Value for Debugging
+  stack[STACKSIZE - 6]  = 0x02020202;  //<! R02 Dummy Value for Debugging
+  stack[STACKSIZE - 7]  = 0x01010101;  //<! R01 Dummy Value for Debugging
+  stack[STACKSIZE - 8]  = 0x00000000;  //<! R00 Dummy Value for Debugging
+  stack[STACKSIZE - 9]  = 0x11111111;  //<! R11 Dummy Value for Debugging
+  stack[STACKSIZE - 10] = 0x10101010;  //<! R10 Dummy Value for Debugging
+  stack[STACKSIZE - 11] = 0x09090909;  //<! R09 Dummy Value for Debugging
+  stack[STACKSIZE - 12] = 0x08080808;  //<! R08 Dummy Value for Debugging
+  stack[STACKSIZE - 13] = 0x07070707;  //<! R07 Dummy Value for Debugging
+  stack[STACKSIZE - 14] = 0x06060606;  //<! R06 Dummy Value for Debugging
+  stack[STACKSIZE - 15] = 0x05050505;  //<! R05 Dummy Value for Debugging
+  stack[STACKSIZE - 16] = 0x04040404;  //<! R04 Dummy Value for Debugging
 
 }
 
@@ -98,29 +98,16 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 {
   long status;
   status = StartCritical();
-  Tcb_t* thread = RunningThread->next->prev;
+  Tcb_t* thread = RunningThread->next->prev;  //<! Cheap trick to help maintain list
+                                              //<! on Context switch
 
   if(ThreadList.count > 0){
-    /*
-    node->prev = RunningThread->prev;
-
-    node->next = (RunningThread->next)->prev; //!< NOTE: This should fix a lot of problems
-		//node->next = RunningThread;
-		//node->prev = RunningThread->next->prev->prev;
-    node->prev->next = node;
-    //RunningThread->prev = node;
-    RunningThread->next->prev->prev = node;
-    */
     node->next = thread;
     node->prev = thread->prev;
     thread->prev = node;
     node->prev->next = node;
-  }
-  else {
+  }else {
     ThreadList.head = node;  //<! Replace Idle Thread with node
-    // RunningThread->next = node;    //<! Replace Idle Thread with node
-    // RunningThread->prev = node;    //<! Replace Idle Thread with node
-    //RunningThread = node;
 		RunningThread->next = node;
 		RunningThread->prev = node;
   }
@@ -130,29 +117,7 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 }
 
 void TCB_RemoveThread(Tcb_t* thread){
-  if(ThreadList.count > 1){
-        (thread->prev)->next = thread->next;
-        (thread->next)->prev = thread->prev;
-        if(thread == ThreadList.head){
-          ThreadList.head = ThreadList.head->next;
-        }
-        // if(thread == RunningThread){
-        //   RunningThread = RunningThread->next;
-        // }
-        //thread = thread->prev;  //Roll back running thread so that we point to the right
-                                              // Location after context switching
-        ThreadList.count--;
-    }else if(ThreadList.count == 1){
-        // thread = NULL;
-        RunningThread->next = idleThread;
-        idleThread->next = idleThread;
-        idleThread->prev = idleThread;
-
-        thread->next = idleThread;   //Make Sure to never call sleep on idle thread
-        ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
-        ThreadList.count--;
-    } 
-    ThreadPool.free(thread);
+  method_not_implemented.fail();
 }
 void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
     // Tcb_t* thread = RunningThread;
