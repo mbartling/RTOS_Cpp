@@ -243,11 +243,13 @@ void OS_Kill(void) {
     // if(TCB_threadListEmpty != 0) {
         // OS_Suspend(); 
     // }
+	
+	
+    EndCritical(status); 
     Context_Switch();
 
     // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
-    EndCritical(status); 
 }
 
 

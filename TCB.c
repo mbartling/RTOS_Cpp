@@ -247,7 +247,9 @@ void TCB_RemoveRunningAndSleep(void) {
        
         ThreadList.count--;
     }else if(ThreadList.count == 1){
-        // RunningThread = NULL; 
+        // RunningThread = NULL;
+				idleThread->next = idleThread;
+				idleThread->prev = idleThread;
         RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
         ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
 

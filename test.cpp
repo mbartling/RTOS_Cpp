@@ -5,7 +5,7 @@
 //#include "UART2.h"
 #include <string.h> 
 
-#define TESTMAIN 3
+#define TESTMAIN 1
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 void cr4_fft_64_stm32(void *pssOUT, void *pssIN, unsigned short Nbin);
 //*********Prototype for PID in PID_stm32.s, STMicroelectronics
@@ -322,7 +322,8 @@ void Thread1(void){
   for(;;){
     PE0 ^= 0x01;       // heartbeat
     Count1++;
-    OS_Suspend();      // cooperative multitasking
+    //OS_Suspend();      // cooperative multitasking
+		OS_Sleep(10);
   }
 }
 void Thread2(void){
@@ -330,7 +331,8 @@ void Thread2(void){
   for(;;){
     PE1 ^= 0x02;       // heartbeat
     Count2++;
-    OS_Suspend();      // cooperative multitasking
+    //OS_Suspend();      // cooperative multitasking
+		OS_Sleep(20);
   }
 }
 void Thread3(void){
@@ -338,7 +340,8 @@ void Thread3(void){
   for(;;){
     PE2 ^= 0x04;       // heartbeat
     Count3++;
-    OS_Suspend();      // cooperative multitasking
+    //OS_Suspend();      // cooperative multitasking
+		OS_Sleep(40);
   }
 }
 

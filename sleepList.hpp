@@ -38,6 +38,7 @@ private:
     Cell* p = storage.get();
     p->next = p;
     p->prev = p;
+		p->deleteMe = false;
     return p;
   }
 
@@ -55,12 +56,14 @@ public:
   void push_back(const T& elem){
     Cell* p = storage.get();
     p->data = elem;
+		p->deleteMe = false;
     insertAfter(p, tail());
   }
 
   void push_front(const T& elem){
     Cell* p = storage.get();
     p->data = elem;
+		p->deleteMe = false;
     insertAfter(p, head()->prev);
   }
 
@@ -165,6 +168,7 @@ private:
   void remove(Cell* p){
     p->prev->next = p->next;
     p->next->prev = p->prev;
+		p->data = NULL;
     storage.free(p);
     count--;
   }
