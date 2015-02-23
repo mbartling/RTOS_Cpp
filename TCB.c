@@ -6,14 +6,12 @@
 // #include <iostream>
 #define DEBUGprintf(...) /**/
 
-List<Tcb_t*, MAXNUMTHREADS> SleepingList2;
+List<Tcb_t*, MAXNUMTHREADS> SleepingList;
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
 Tcb_t* RunningThread = NULL;
-Tcb_t* NextRunningThread = NULL;
 Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
-TcbListC_t SleepingList;
-Tcb_t DummyThread;
+// Tcb_t DummyThread;
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,12 +22,10 @@ void EnableInterrupts(void);  // Enable interrupts
 long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
-// void PendSV_Handler(void);
 #ifdef __cplusplus
 }
 #endif
 
-//sleepListS_t SleepingList;
 Tcb_t* idleThread = NULL;
 uint32_t idleTime = 0;
 
@@ -48,7 +44,7 @@ void (*idleTask)(void);
  * other words, there are no threads to switch to in the list and we do 
  * not want to context switch to null.
  */
-void TCB_Configure_IdleThread(void){
+ void TCB_Configure_IdleThread(void){
   idleTask = Idle;
   idleThread = TCB_GetNewThread();
   TCB_SetInitialStack(idleThread);
@@ -108,8 +104,8 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
     node->prev->next = node;
   }else {
     ThreadList.head = node;  //<! Replace Idle Thread with node
-		RunningThread->next = node;
-		RunningThread->prev = node;
+    RunningThread->next = node;
+    RunningThread->prev = node;
   }
   ThreadList.count++;
   EndCritical(status);
@@ -120,274 +116,91 @@ void TCB_RemoveThread(Tcb_t* thread){
   EX_method_not_implemented.fail();
 }
 void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
-    // Tcb_t* thread = RunningThread;
-	  long status;
-  status = StartCritical();
-    if(ThreadList.count > 1){
-        (thread->prev)->next = thread->next;
-        (thread->next)->prev = thread->prev;
-        if(thread == ThreadList.head){
-          ThreadList.head = ThreadList.head->next;
-        }
-        // if(thread == RunningThread){
-        //   RunningThread = RunningThread->next;
-        // }
-
-        //thread = thread->prev;  //Roll back running thread so that we point to the right
-                                              // Location after context switching
-        // DummyThread.sp = thread->sp;
-        // DummyThread.next = thread->next;
-        // thread = &DummyThread;
-       
-        ThreadList.count--;
-    }else if(ThreadList.count == 1){
-        // thread = NULL; 
-        RunningThread->next = idleThread;
-
-        idleThread->next = idleThread;
-        thread->next = idleThread;   //Make Sure to never call sleep on idle thread
-        idleThread->prev = idleThread;
-
-        ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
-
-        // thread = &DummyThread;
-        ThreadList.count--;
-    } 
-    // TCB_AddSleeping(thread);
-    SleepingList2.push_back(thread);
-    //SleepingList2.Add(thread);
-    thread = &DummyThread;
-		EndCritical(status);
-
+  EX_method_not_implemented.fail();
 
 }
 void TCB_RemoveRunningThread(void) {
-		  long status;
+  long status;
   status = StartCritical();
-    Tcb_t* thread = RunningThread;
-		if(ThreadList.count == 0){
-			EndCritical(status);
+  Tcb_t* thread = RunningThread;
+  if(ThreadList.count == 0){
+   EndCritical(status);
 
-			return;
-		}
-    if(ThreadList.count > 1){
-        (RunningThread->prev)->next = RunningThread->next;
-        (RunningThread->next)->prev = RunningThread->prev;
-				//RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
-																							// Location after context switching
-       // DummyThread.sp = RunningThread->sp;
-       // DummyThread.next = RunningThread->next;
-        //RunningThread = &DummyThread;
+   return; // Never remove idle thread
+ }
+
+ if(ThreadList.count > 1){
+  (RunningThread->prev)->next = RunningThread->next;  //Update thread list
+  (RunningThread->next)->prev = RunningThread->prev;  //Update thread list
+
+  ThreadList.count--;
+}else if(ThreadList.count == 1){
+  
+  idleThread->next = idleThread;
+        RunningThread->next = idleThread; //Make Sure to never call sleep on idle thread
+        ThreadList.head = idleThread;     //Make Sure to never call sleep on idle thread 
 
         ThreadList.count--;
-    }else if(ThreadList.count == 1){
-        // RunningThread = NULL;
-      idleThread->next = idleThread;
-        RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
-        ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
-			  //DummyThread.sp = RunningThread->sp;
-        //DummyThread.next = RunningThread->next;
-        ThreadList.count--;
-    } 
-    ThreadPool.free(thread);
-		//RunningThread = &DummyThread;
-		EndCritical(status);
+      } 
+      ThreadPool.free(thread); // Free the thread in memory
+      EndCritical(status);
 
-}
+    }
 
 void TCB_RemoveRunningAndSleep(void) {
-    // Tcb_t* thread = RunningThread;
-    // DummyThread.sp = RunningThread->sp;
-    // DummyThread.next = RunningThread->next;
-			  long status;
-  status = StartCritical();
-    if(ThreadList.count > 1){
-        (RunningThread->prev)->next = RunningThread->next;
-        (RunningThread->next)->prev = RunningThread->prev;
-				//RunningThread = RunningThread->prev;	//Roll back running thread so that we point to the right
-																							// Location after context switching
-        // DummyThread.sp = RunningThread->sp;
-        // DummyThread.next = RunningThread->next;
-        // RunningThread = &DummyThread;
-       
-        ThreadList.count--;
+     long status;
+     status = StartCritical();
+     if(ThreadList.count > 1){
+      (RunningThread->prev)->next = RunningThread->next;
+      (RunningThread->next)->prev = RunningThread->prev;
+      ThreadList.count--;
     }else if(ThreadList.count == 1){
-        // RunningThread = NULL;
-				idleThread->next = idleThread;
-				idleThread->prev = idleThread;
-        RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
-        ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
-
-        // RunningThread = &DummyThread;
-        ThreadList.count--;
+      idleThread->next = idleThread;
+      idleThread->prev = idleThread;
+      RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
+      ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
+      ThreadList.count--;
     } 
-    DEBUGprintf("Sleeping\n");
-    // TCB_AddSleeping(RunningThread);
-    SleepingList2.push_back(RunningThread);
-    // SleepingList2.Add(RunningThread);
-    // RunningThread = &DummyThread;
-				EndCritical(status);
-
-
+      DEBUGprintf("Sleeping\n");
+      SleepingList.push_back(RunningThread);
+      EndCritical(status);
 }
+
 Tcb_t* TCB_GetRunningThread(void){
-  return RunningThread;
+      return RunningThread;
 }
 
 int TCB_threadListEmpty(void){
-    return (ThreadList.count == 0);
-}
-
-
-void TCB_AddSleeping(Tcb_t* node)
-{
-  // sleepElem_t* elem = SleepingList.head;
-  Tcb_t* elem = SleepingList.head;
-  if(SleepingList.count > 0){
-    // node->next = SleepingThread;
-    // node->prev = SleepingThread->prev;
-    // node->prev->next = node;
-    // SleepingThread->prev = node;
-    while(elem->next != NULL){
-      elem = elem->next;
-    }
-    elem->next = node;
-    node->next = NULL;
-    node->prev = elem;
-  }
-  else {
-    SleepingList.head = node;
-    // SleepingThread = node;
-    node->next = NULL;
-    node->prev = NULL;
-  }
-  SleepingList.count++;
+      return (ThreadList.count == 0);
 }
 
 void TCB_RemoveSleepingNode(Tcb_t* thread){
-  if(SleepingList.count > 1){
-      if(thread == SleepingList.head){
-        SleepingList.head = SleepingList.head->next;
-      }
-      (thread->prev)->next = thread->next;
-      (thread->next)->prev = thread->prev;
-      SleepingList.count--;
-    }else if(SleepingList.count == 1){
-			  // SleepingThread->next = NULL;
-				// SleepingThread->prev = NULL;
-        // SleepingThread = NULL; 
-        // SleepingList.head->next = NULL;
-        // SleepingList.head->prev = NULL;
-				SleepingList.head = NULL;
-        SleepingList.count--;
-    } 
-    thread->next = thread;
-    thread->prev = thread;
+      EX_method_not_implemented.fail();
+
 }
-// void TCB_RemoveSleepingAndAdd2Run(void) {
-//     Tcb_t* sleepingNode = SleepingList.head;
-    
-//     while(sleepingNode->next != SleepingList.head){
-//     if(sleepingNode->state_sleep < 1){
-//       TCB_RemoveSleepingNode(sleepingNode);
-//       TCB_InsertNodeBeforeRoot(sleepingNode);
-//     }
-//     sleepingNode = sleepingNode->next;
-//   }
-// }
-/*
+
 void TCB_UpdateSleeping(void) {
-  SleepingList2.UpdateSleeping();
-  Tcb_t* head;
-  Tcb_t* tail;
-  int res;
-  res = SleepingList2.GetReadyList(head, tail);
-  if(res > 0){
-
-
-  (RunningThread->prev)->next = head;
-  head->prev = RunningThread->prev;
-  RunningThread->prev = tail;
-  tail->next = RunningThread;
-  }
-}
-*/
-void TCB_UpdateSleeping(void) {
-  //   Tcb_t* sleepingNode = SleepingList.head;
-  //   if(sleepingNode == NULL){
-  //     return;
-  //   }
-  //   //while(sleepingNode->next != SleepingList.head){
-  //   while(sleepingNode->next != NULL){
-		// 	// if(SleepingList.count == 0){
-		// 	// 	break;
-		// 	// 	}
-  //     sleepingNode->state_sleep--;
-
-  //     if(sleepingNode->state_sleep < 1){
-  //       Tcb_t* prev = sleepingNode->prev;
-  //       TCB_RemoveSleepingNode(sleepingNode);
-  //       TCB_InsertNodeBeforeRoot(sleepingNode);
-  //       sleepingNode = prev;
-  //   }
-  //   sleepingNode = sleepingNode->next;
-  // }
   List<Tcb_t*, MAXNUMTHREADS>::iterator iter;
   Tcb_t* thread;
-  for(iter = SleepingList2.begin(); iter != SleepingList2.end(); ++iter){
+  for(iter = SleepingList.begin(); iter != SleepingList.end(); ++iter){
     ((*iter)->state_sleep)--;
     if((*iter)->state_sleep < 1){
-      // thread = SleepingList2.Get(iter.getCell());
       DEBUGprintf("Found Ready Thread\n");
       thread = *iter;
-      thread->next = thread;
-      thread->prev = thread;
-      thread->state_sleep = 0;
-      // ++iter;
-      // SleepingList2.remove(thread);
-      
-      // iter = SleepingList2.erase(iter);
-      iter.mark4Delete();
-			//Tcb_t* runningTemp = RunningThread;
-			//RunningThread = RunningThread->next;
-      TCB_InsertNodeBeforeRoot(thread);
-			//RunningThread = runningTemp;
-      
 
+      thread->next = thread;    /// configure thread node
+      thread->prev = thread;    /// configure thread node
+      thread->state_sleep = 0;  /// configure thread node
+      
+      iter.mark4Delete();       /// Mark Thread for removal from sleepinglist
+      TCB_InsertNodeBeforeRoot(thread);
     }
   }
-  SleepingList2.clean();
+  SleepingList.clean();      /// Update the sleeping lists, remove entries marked 
+                              /// for deletion
 }
 
 void TCB_CheckSleeping(void) {
-    Tcb_t* sleepingNode = SleepingList.head;
-    if(sleepingNode == NULL){
-      return;
-    }
-    while(sleepingNode->next != SleepingList.head){
-      // while(sleepingNode->next != NULL)
-      // if(SleepingList.count == 0){
-      //   break;
-      //   }
-      // sleepingNode->state_sleep--;
+  EX_method_not_implemented.fail();
 
-      if(sleepingNode->state_sleep < 1){
-        Tcb_t* prev = sleepingNode->prev;
-        TCB_RemoveSleepingNode(sleepingNode);
-        TCB_InsertNodeBeforeRoot(sleepingNode);
-        sleepingNode = prev;
-    }
-    sleepingNode = sleepingNode->next;
-  }
-}
-/*
-void dummy(void){
-  printf("Attempting Task\n");
-  void (*Task)(void);
-  Task = (void (*)(void)) RunningThread->stack[STACKSIZE - 2];
-  Task();
-}
-*/
-void ContextSwitch(void){
-  RunningThread = RunningThread->next;
 }
