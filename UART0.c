@@ -34,6 +34,7 @@
 #include "FIFO.h"
 #include "FIFO.hpp"
 #include "UART0.h"
+#include "priority.h"
 #include "UART0_debug.h"
 
 #define NVIC_EN0_INT5           0x00000020  // Interrupt 5 enable
@@ -107,7 +108,7 @@ void UART0_Init(void){
   GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R&0xFFFFFF00)+0x00000011;
   GPIO_PORTA_AMSEL_R = 0;               // disable analog functionality on PA
                                         // UART0=priority 2
-  NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFF00FF)|0x00004000; // bits 13-15
+  NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFF00FF)|  UART0Priority; //(bits 13-15); 
   NVIC_EN0_R = NVIC_EN0_INT5;           // enable interrupt 5 in NVIC for UART0 (pg 104)
   //EnableInterrupts();
 
