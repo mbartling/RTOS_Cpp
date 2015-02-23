@@ -32,6 +32,7 @@
 //#include <stdio.h>
 
 #include "FIFO.h"
+#include "FIFO.hpp"
 #include "UART0.h"
 #include "UART0_debug.h"
 
@@ -68,21 +69,25 @@ void EnableInterrupts(void);  // Enable interrupts
 long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
+#ifdef __cplusplus
+}
+#endif
 
 #define FIFOSIZE   16         // size of the FIFOs (must be power of 2)
 #define FIFOSUCCESS 1         // return value on success
 #define FIFOFAIL    0         // return value on failure
                               // create index implementation FIFO (see FIFO.h)
-AddIndexFifo(Rx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
-AddIndexFifo(Tx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
-
+// AddIndexFifo(Rx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
+// AddIndexFifo(Tx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
+FifoP<char, FIFOSIZE> Rx0Fifo;
+FifoP<char, FIFOSIZE> Tx0Fifo;
 // Initialize UART0
 // Baud rate is 115200 bits/sec
 void UART0_Init(void){
   SYSCTL_RCGCUART_R |= 0x01;            // activate UART0
   SYSCTL_RCGCGPIO_R |= 0x01;            // activate port A
-  Rx0Fifo_Init();                        // initialize empty FIFOs
-  Tx0Fifo_Init();
+  // Rx0Fifo_Init();                        // initialize empty FIFOs
+  // Tx0Fifo_Init();
   UART0_CTL_R &= ~UART_CTL_UARTEN;      // disable UART
   UART0_IBRD_R = 43;                    // IBRD = int(50,000,000 / (16 * 115,200)) = int(27.1267)
   UART0_FBRD_R = 26;                    // FBRD = int(0.1267 * 64 + 0.5) = 8
@@ -112,17 +117,21 @@ void UART0_Init(void){
 // stop when hardware RX FIFO is empty or software RX FIFO is full
 void static copyHardwareToSoftware(void){
   char letter;
-  while(((UART0_FR_R&UART_FR_RXFE) == 0) && (Rx0Fifo_Size() < (FIFOSIZE - 1))){
+  //while(((UART0_FR_R&UART_FR_RXFE) == 0) && (Rx0Fifo_Size() < (FIFOSIZE - 1))){
+  while(((UART0_FR_R&UART_FR_RXFE) == 0) && (Rx0Fifo.getSize() < (FIFOSIZE - 1))){
     letter = UART0_DR_R;
-    Rx0Fifo_Put(letter);
+    // Rx0Fifo_Put(letter);
+    Rx0Fifo.Put(letter);
   }
 }
 // copy from software TX FIFO to hardware TX FIFO
 // stop when software TX FIFO is empty or hardware TX FIFO is full
 void static copySoftwareToHardware(void){
   char letter;
-  while(((UART0_FR_R&UART_FR_TXFF) == 0) && (Tx0Fifo_Size() > 0)){
-    Tx0Fifo_Get(&letter);
+  // while(((UART0_FR_R&UART_FR_TXFF) == 0) && (Tx0Fifo_Size() > 0)){
+  while(((UART0_FR_R&UART_FR_TXFF) == 0) && (Tx0Fifo.getSize() > 0)){
+    // Tx0Fifo_Get(&letter);
+    Tx0Fifo.Get(&letter);
     UART0_DR_R = letter;
   }
 }
@@ -130,14 +139,18 @@ void static copySoftwareToHardware(void){
 // spin if RxFifo is empty
 char UART0_InChar(void){
   char letter;
-  while(Rx0Fifo_Get(&letter) == FIFOFAIL){};
+  // while(Rx0Fifo_Get(&letter) == FIFOFAIL){};
+  // while(!Rx0Fifo.Get(&letter)){};
+  Rx0Fifo.Get(&letter);
 	if(letter == '\r') return('\n');
   return(letter );
 }
 // output ASCII character to UART
 // spin if TxFifo is full
 void UART0_OutChar(char data){
-  while(Tx0Fifo_Put(data) == FIFOFAIL){};
+  // while(Tx0Fifo_Put(data) == FIFOFAIL){};
+  // while(!Tx0Fifo.Put(data) == FIFOFAIL){};
+  Tx0Fifo.Put(data);
   UART0_IM_R &= ~UART_IM_TXIM;          // disable TX FIFO interrupt
   copySoftwareToHardware();
   UART0_IM_R |= UART_IM_TXIM;           // enable TX FIFO interrupt
@@ -151,7 +164,8 @@ void UART0_Handler(void){
     UART0_ICR_R = UART_ICR_TXIC;        // acknowledge TX FIFO
     // copy from software TX FIFO to hardware TX FIFO
     copySoftwareToHardware();
-    if(Tx0Fifo_Size() == 0){             // software TX FIFO is empty
+    // if(Tx0Fifo_Size() == 0){             // software TX FIFO is empty
+    if(Tx0Fifo.Size() == 0){             // software TX FIFO is empty
       UART0_IM_R &= ~UART_IM_TXIM;      // disable TX FIFO interrupt
     }
   }
@@ -166,6 +180,3 @@ void UART0_Handler(void){
     copyHardwareToSoftware();
   }
 }
-#ifdef __cplusplus
-}
-#endif

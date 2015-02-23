@@ -15,15 +15,17 @@ void EndCritical(long sr);    // restore I bit to previous value
 
 template <typename T>
  class Fifo{
- 	enum Status {FAIL=-1, SUCCESS=0};
+ 	// enum Status {FAIL=-1, SUCCESS=0};
   Sema4Type m;
   Sema4Type available;
 
  public:
-  virtual int Put(T data){
+  using SUCCESS = true;
+  using FAIL = false;
+  virtual bool Put(T data){
     return FAIL; 
   }
-  virtual int Get(T* data){
+  virtual bool Get(T* data){
     return (FAIL);
   }
   inline void Wait(){
@@ -55,8 +57,7 @@ class FifoP : public Fifo<T>{
   T volatile * PutPt;
   T volatile * GetPt;
   T FifoData[Size];
-  enum Status {FAIL=-1, SUCCESS=0};
-
+  // enum Status {FAIL=-1, SUCCESS=0};
 
 public:
   FifoP(){
@@ -66,7 +67,7 @@ public:
     EndCritical(sr);
   }
 
-  int Put(T data){
+  bool Put(T data){
     T volatile *nextPutPt;
     nextPutPt = PutPt + 1;
 
@@ -84,10 +85,11 @@ public:
       *(PutPt) = data;
       PutPt = nextPutPt;
       return(SUCCESS);
+      // return true;
     }
   }
 
-  int Get(T *data){
+  bool Get(T *data){
     // if(PutPt == GetPt){
       // return(FAIL);
     // }
@@ -117,7 +119,7 @@ class FifoI : public Fifo<T>{
   uint32_t volatile PutI;
   uint32_t volatile GetI;
   T FifoData[Size];
-  enum Status {FAIL=-1, SUCCESS=0};
+  // enum Status {FAIL=-1, SUCCESS=0};
 
 public:
   FifoI(){
@@ -127,7 +129,7 @@ public:
     EndCritical(sr);
   }
 
-  int Put(T data){
+  bool Put(T data){
     if((PutI - GetI) & ~(Size - 1)){
       return FAIL;
     }
@@ -136,7 +138,7 @@ public:
     return SUCCESS;
   }
 
-  int Get(T* data){
+  bool Get(T* data){
     if(PutI == GetI){
       return(FAIL);
     }
