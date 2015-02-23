@@ -69,11 +69,12 @@ void EnableInterrupts(void);  // Enable interrupts
 long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
+void UART0_Handler(void);
 #ifdef __cplusplus
 }
 #endif
 
-#define FIFOSIZE   16         // size of the FIFOs (must be power of 2)
+#define FIFOSIZE   1024         // size of the FIFOs (must be power of 2)
 #define FIFOSUCCESS 1         // return value on success
 #define FIFOFAIL    0         // return value on failure
                               // create index implementation FIFO (see FIFO.h)
@@ -108,7 +109,7 @@ void UART0_Init(void){
                                         // UART0=priority 2
   NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFF00FF)|0x00004000; // bits 13-15
   NVIC_EN0_R = NVIC_EN0_INT5;           // enable interrupt 5 in NVIC for UART0 (pg 104)
-  EnableInterrupts();
+  //EnableInterrupts();
 
   DEBUG_UART0_PRINTF("Finished Initializing%c", LF);
 	
@@ -159,6 +160,7 @@ void UART0_OutChar(char data){
 // hardware TX FIFO goes from 3 to 2 or less items
 // hardware RX FIFO goes from 1 to 2 or more items
 // UART receiver has timed out
+
 void UART0_Handler(void){
   if(UART0_RIS_R&UART_RIS_TXRIS){       // hardware TX FIFO <= 2 items
     UART0_ICR_R = UART_ICR_TXIC;        // acknowledge TX FIFO

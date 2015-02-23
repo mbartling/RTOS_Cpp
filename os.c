@@ -23,6 +23,8 @@ void StartOS(void);
 void ContextSwitch(void);
 void GPIOPortF_Handler(void);
 // void PendSV_Handler(void);
+void Timer0A_Handler(void);
+	
 #ifdef __cplusplus
 }
 #endif
@@ -249,9 +251,9 @@ void OS_Kill(void) {
 	
 	
     EndCritical(status); 
-    Context_Switch();
+    //Context_Switch();
 
-    // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
 }
 

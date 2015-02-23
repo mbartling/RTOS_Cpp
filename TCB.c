@@ -122,7 +122,7 @@ void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
 void TCB_RemoveRunningThread(void) {
   long status;
   status = StartCritical();
-  Tcb_t* thread = RunningThread;
+  //Tcb_t* thread = RunningThread;
   if(ThreadList.count == 0){
    EndCritical(status);
 
@@ -137,12 +137,13 @@ void TCB_RemoveRunningThread(void) {
 }else if(ThreadList.count == 1){
   
   idleThread->next = idleThread;
+  idleThread->prev = idleThread;
         RunningThread->next = idleThread; //Make Sure to never call sleep on idle thread
         ThreadList.head = idleThread;     //Make Sure to never call sleep on idle thread 
 
         ThreadList.count--;
       } 
-      ThreadPool.free(thread); // Free the thread in memory
+      ThreadPool.free(RunningThread); // Free the thread in memory
       EndCritical(status);
 
     }

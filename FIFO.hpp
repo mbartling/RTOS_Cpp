@@ -24,7 +24,7 @@ template <typename T>
 
  public:
 	 Fifo(void){
-			OS_InitSemaphore(&m, 0);
+			OS_InitSemaphore(&m, 1);
 		 OS_InitSemaphore(&available, 0);
 	 }
   //using SUCCESS = true;
@@ -41,13 +41,13 @@ template <typename T>
     OS_Wait(&available);
   }
   inline void bWait(){
-    OS_bWait(&m);
+    OS_Wait(&m);
   }
   inline void Signal(){
     OS_Signal(&available);
   }
   inline void bSignal(){
-    OS_bSignal(&m);
+    OS_Signal(&m);
   }
 
 //  virtual unsigned short getSize(void){
@@ -65,7 +65,8 @@ template <typename T, int Size>
 class FifoP : public Fifo<T>{
   T volatile * PutPt;
   T volatile * GetPt;
-  T FifoData[Size];
+  T volatile FifoData[Size];
+  uint32_t LostData;
   // enum Status {FAIL=-1, SUCCESS=0};
 
 public:
@@ -86,32 +87,37 @@ public:
     //if(nextPutPt == GetPt){
       // return(FAIL);
     
-    while(nextPutPt == GetPt){
-      this->Wait();
-    }
+    // while(nextPutPt == GetPt){
+      // this->Wait();
+    // }
   //}
-  //  else{
+    if(nextPutPt == GetPt){
+      LostData++;
+    }
+   else{
       *(PutPt) = data;
       PutPt = nextPutPt;
+      this->Signal();
       return(SUCCESS);
       // return true;
-    //}
+    }
+	 return(FAIL);
   }
 
   bool Get(T *data){
     // if(PutPt == GetPt){
       // return(FAIL);
     // }
-    while(GetPt == PutPt){
-      this->Wait(); //Wait till available
-    }
+    // while(GetPt == PutPt){
+    this->Wait(); //Wait till available
+    // }
     this->bWait();
     *data = *(GetPt++);
     if(GetPt == &FifoData[Size]){
       GetPt = &FifoData[0];
     }
     this->bSignal();
-    this->Signal();
+    // this->Signal();
     return SUCCESS;
   }
 
