@@ -165,7 +165,7 @@ void UART0_Handler(void){
     // copy from software TX FIFO to hardware TX FIFO
     copySoftwareToHardware();
     // if(Tx0Fifo_Size() == 0){             // software TX FIFO is empty
-    if(Tx0Fifo.Size() == 0){             // software TX FIFO is empty
+    if(Tx0Fifo.getSize() == 0){             // software TX FIFO is empty
       UART0_IM_R &= ~UART_IM_TXIM;      // disable TX FIFO interrupt
     }
   }

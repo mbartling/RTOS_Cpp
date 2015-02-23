@@ -13,6 +13,9 @@ void EndCritical(long sr);    // restore I bit to previous value
  }
 #endif
 
+#define SUCCESS true
+#define FAIL false
+	
 template <typename T>
  class Fifo{
  	// enum Status {FAIL=-1, SUCCESS=0};
@@ -20,14 +23,20 @@ template <typename T>
   Sema4Type available;
 
  public:
-  using SUCCESS = true;
-  using FAIL = false;
-  virtual bool Put(T data){
-    return FAIL; 
-  }
-  virtual bool Get(T* data){
-    return (FAIL);
-  }
+	 Fifo(void){
+			OS_InitSemaphore(&m, 0);
+		 OS_InitSemaphore(&available, 0);
+	 }
+  //using SUCCESS = true;
+  //using FAIL = false;
+
+ 
+//  virtual bool Put(T data){
+//    return FAIL; 
+//  }
+//  virtual bool Get(T* data){
+//    return (FAIL);
+//  }
   inline void Wait(){
     OS_Wait(&available);
   }
@@ -41,9 +50,9 @@ template <typename T>
     OS_bSignal(&m);
   }
 
-  virtual unsigned short getSize(void){
-    return (unsigned short) 0;
-  }
+//  virtual unsigned short getSize(void){
+//    return (unsigned short) 0;
+//  }
  };
 /**
  * @brief Pointer type Fifo
@@ -74,19 +83,19 @@ public:
     if(nextPutPt == &FifoData[Size]){
       nextPutPt = &FifoData[0];
     }
-    if(nextPutPt == GetPt){
+    //if(nextPutPt == GetPt){
       // return(FAIL);
     
     while(nextPutPt == GetPt){
       this->Wait();
     }
-  }
-    else{
+  //}
+  //  else{
       *(PutPt) = data;
       PutPt = nextPutPt;
       return(SUCCESS);
       // return true;
-    }
+    //}
   }
 
   bool Get(T *data){
