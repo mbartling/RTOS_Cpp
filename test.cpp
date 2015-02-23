@@ -1,11 +1,13 @@
 #include "OS.h"
 #include "inc/tm4c123gh6pm.h"
 //#include "ST7735.h"
-//#include "ADC.h"
+#include "ADC.h"
+
 //#include "UART2.h"
 #include <string.h> 
-
-#define TESTMAIN 4
+#include <stdio.h> 
+//#define TESTMAIN 4
+#define Task1
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 void cr4_fft_64_stm32(void *pssOUT, void *pssIN, unsigned short Nbin);
 //*********Prototype for PID in PID_stm32.s, STMicroelectronics
@@ -44,61 +46,61 @@ void PortE_Init(void){ unsigned long volatile delay;
   GPIO_PORTE_AMSEL_R &= ~0x0F;;      // disable analog functionality on PF
 }
 ////------------------Task 1--------------------------------
-//// 2 kHz sampling ADC channel 1, using software start trigger
-//// background thread executed at 2 kHz
-//// 60-Hz notch high-Q, IIR filter, assuming fs=2000 Hz
-//// y(n) = (256x(n) -503x(n-1) + 256x(n-2) + 498y(n-1)-251y(n-2))/256 (2k sampling)
-//// y(n) = (256x(n) -476x(n-1) + 256x(n-2) + 471y(n-1)-251y(n-2))/256 (1k sampling)
-//long Filter(long data){
-//static long x[6]; // this MACQ needs twice
-//static long y[6];
-//static unsigned long n=3;   // 3, 4, or 5
-//  n++;
-//  if(n==6) n=3;     
-//  x[n] = x[n-3] = data;  // two copies of new data
-//  y[n] = (256*(x[n]+x[n-2])-503*x[n-1]+498*y[n-1]-251*y[n-2]+128)/256;
-//  y[n-3] = y[n];         // two copies of filter outputs too
-//  return y[n];
-//} 
-////******** DAS *************** 
-//// background thread, calculates 60Hz notch filter
-//// runs 2000 times/sec
-//// samples channel 4, PD3,
-//// inputs:  none
-//// outputs: none
-//unsigned long DASoutput;
-//void DAS(void){ 
-//unsigned long input;  
-//unsigned static long LastTime;  // time at previous ADC sample
-//unsigned long thisTime;         // time at current ADC sample
-//long jitter;                    // time between measured and expected, in us
-//  if(NumSamples < RUNLENGTH){   // finite time run
-//    PE0 ^= 0x01;
-//    input = ADC_In();           // channel set when calling ADC_Init
-//    PE0 ^= 0x01;
-//    thisTime = OS_Time();       // current time, 12.5 ns
-//    DASoutput = Filter(input);
-//    FilterWork++;        // calculation finished
-//    if(FilterWork>1){    // ignore timing of first interrupt
-//      unsigned long diff = OS_TimeDifference(LastTime,thisTime);
-//      if(diff>PERIOD){
-//        jitter = (diff-PERIOD+4)/8;  // in 0.1 usec
-//      }else{
-//        jitter = (PERIOD-diff+4)/8;  // in 0.1 usec
-//      }
-//      if(jitter > MaxJitter){
-//        MaxJitter = jitter; // in usec
-//      }       // jitter should be 0
-//      if(jitter >= JitterSize){
-//        jitter = JITTERSIZE-1;
-//      }
-//      JitterHistogram[jitter]++; 
-//    }
-//    LastTime = thisTime;
-//    PE0 ^= 0x01;
-//  }
-//}
-////--------------end of Task 1-----------------------------
+// 2 kHz sampling ADC channel 1, using software start trigger
+// background thread executed at 2 kHz
+// 60-Hz notch high-Q, IIR filter, assuming fs=2000 Hz
+// y(n) = (256x(n) -503x(n-1) + 256x(n-2) + 498y(n-1)-251y(n-2))/256 (2k sampling)
+// y(n) = (256x(n) -476x(n-1) + 256x(n-2) + 471y(n-1)-251y(n-2))/256 (1k sampling)
+long Filter(long data){
+static long x[6]; // this MACQ needs twice
+static long y[6];
+static unsigned long n=3;   // 3, 4, or 5
+  n++;
+  if(n==6) n=3;     
+  x[n] = x[n-3] = data;  // two copies of new data
+  y[n] = (256*(x[n]+x[n-2])-503*x[n-1]+498*y[n-1]-251*y[n-2]+128)/256;
+  y[n-3] = y[n];         // two copies of filter outputs too
+  return y[n];
+} 
+//******** DAS *************** 
+// background thread, calculates 60Hz notch filter
+// runs 2000 times/sec
+// samples channel 4, PD3,
+// inputs:  none
+// outputs: none
+unsigned long DASoutput;
+void DAS(void){ 
+unsigned long input;  
+unsigned static long LastTime;  // time at previous ADC sample
+unsigned long thisTime;         // time at current ADC sample
+long jitter;                    // time between measured and expected, in us
+  if(NumSamples < RUNLENGTH){   // finite time run
+    PE0 ^= 0x01;
+    input = ADC_In();           // channel set when calling ADC_Init
+    PE0 ^= 0x01;
+    thisTime = OS_Time();       // current time, 12.5 ns
+    DASoutput = Filter(input);
+    FilterWork++;        // calculation finished
+    if(FilterWork>1){    // ignore timing of first interrupt
+      unsigned long diff = OS_TimeDifference(LastTime,thisTime);
+      if(diff>PERIOD){
+        jitter = (diff-PERIOD+4)/8;  // in 0.1 usec
+      }else{
+        jitter = (PERIOD-diff+4)/8;  // in 0.1 usec
+      }
+      if(jitter > MaxJitter){
+        MaxJitter = jitter; // in usec
+      }       // jitter should be 0
+      if(jitter >= JitterSize){
+        jitter = JITTERSIZE-1;
+      }
+      JitterHistogram[jitter]++; 
+    }
+    LastTime = thisTime;
+    PE0 ^= 0x01;
+  }
+}
+//--------------end of Task 1-----------------------------
 //
 ////------------------Task 2--------------------------------
 //// background thread executes with SW1 button
@@ -536,6 +538,33 @@ int main(void){   // Testmain4
   return 0;            // this never executes
 }
 #endif
+
+
+#ifdef Task1
+void printStuff() {
+    for (int i = 0; i < 64; i++){
+       printf("%u\n", JitterHistogram[i]); 
+    }
+    OS_Kill();
+}
+    //void dummy() {
+//    ;
+//}
+
+int main(void){   // Testmain4
+ //int Testmain4(void){   // Testmain4
+  Count4 = 0;          
+  OS_Init();           // initialize, disable interrupts
+  PortE_Init();       // profile user threads
+  //int period = 80000;   
+  OS_AddPeriodicThread(&DAS, PERIOD, 0);
+  OS_AddSW1Task(&printStuff,2);
+  OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
+  return 0;            // this never executes
+ 
+} 
+#endif
+
 ////******************* Lab 3 Preparation 2**********
 //// Modify this so it runs with your RTOS (i.e., fix the time units to match your OS)
 //// run this with 
