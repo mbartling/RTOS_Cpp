@@ -26,7 +26,7 @@ void GPIOPortF_Handler(void);
 #ifdef __cplusplus
 }
 #endif
-
+unsigned long Time = 0;
 int32_t ThreadCount = 0;
 // Tcb_t idleThreadMem;
 // Tcb_t* idleThread = &idleThreadMem;
@@ -209,13 +209,12 @@ unsigned long OS_Id(void) {
 void (*GlobalPeriodicThread)(void);
 unsigned long GlobalPeriodicThreadPriority;
 int OS_AddPeriodicThread(void(*task)(void), 
-   unsigned long period, unsigned long priority){
-	 long status = StartCritical();
- 
-   GlobalPeriodicThread = task;
+        unsigned long period, unsigned long priority){
+    long status = StartCritical();
+    GlobalPeriodicThread = task;
     Timer_Init((uint32_t)period);
-	 EndCritical(status);
-		return 1;
+    EndCritical(status);
+    return 1;
 }
 
 // ******** OS_Sleep ************
@@ -366,7 +365,19 @@ void SysTick_Handler(void){
     EndCritical(status);
     //Context_Switch();
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
-
+    Time++;
 }
+
+
+unsigned long OS_Time() {
+    return Time;
+}
+
+unsigned long OS_TimeDifference(unsigned long start, unsigned long stop) {
+    return stop - start;
+}
+
+
+
 
 
