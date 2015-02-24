@@ -1,6 +1,6 @@
 #include "OS.h"
 #include "inc/tm4c123gh6pm.h"
-//#include "ST7735.h"
+#include "ST7735.h"
 #include "ADC.h"
 
 //#include "UART2.h"
@@ -8,11 +8,16 @@
 #include <stdio.h> 
 //#define TESTMAIN 4
 #define Task1
+#ifdef __cplusplus
+extern "C" {
+#endif
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 void cr4_fft_64_stm32(void *pssOUT, void *pssIN, unsigned short Nbin);
 //*********Prototype for PID in PID_stm32.s, STMicroelectronics
 short PID_stm32(short Error, short *Coeff);
-
+#ifdef __cplusplus
+}
+#endif
 unsigned long NumCreated;   // number of foreground threads created
 unsigned long PIDWork;      // current number of PID calculations finished
 unsigned long FilterWork;   // number of digital filter calculations finished
