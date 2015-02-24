@@ -24,7 +24,7 @@ template <typename T>
 
  public:
 	 Fifo(void){
-			OS_InitSemaphore(&m, 1);
+         OS_InitSemaphore(&m, 1);
 		 OS_InitSemaphore(&available, 0);
 	 }
   //using SUCCESS = true;

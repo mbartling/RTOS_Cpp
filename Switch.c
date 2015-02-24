@@ -118,14 +118,14 @@ void Board_Init(void){
   GPIO_PORTF_DEN_R |= (SW1|SW2); // 7) enable digital I/O on PF0 and PF4
 
   //setting up the interrupts
-  GPIO_PORTF_IS_R &= ~0x1;   // PF0 is edge-sensitive 
-  GPIO_PORTF_IBE_R &= ~0x1;  // PF0 is not both edges 
-  GPIO_PORTF_IEV_R |= 0x1;   // PF0 rising edge event
-  GPIO_PORTF_ICR_R = 0x1;    // clear flag 0
-  GPIO_PORTF_IM_R |= 0x1;    // enable interrupt on PF0
+  GPIO_PORTF_IS_R &= ~0x11;   // PF0 is edge-sensitive 
+  GPIO_PORTF_IBE_R &= ~0x11;  // PF0 is not both edges 
+  GPIO_PORTF_IEV_R |= 0x11;   // PF0 rising edge event
+  GPIO_PORTF_ICR_R = 0x11;    // clear flag 0
+  GPIO_PORTF_IM_R |= 0x11;    // enable interrupt on PF0
   NVIC_PRI7_R = (NVIC_PRI7_R&0xFF0FFFFF)|0x00400000; //priority 2
   NVIC_EN0_R = NVIC_EN0_INT30;
- EnableInterrupts();
+ //EnableInterrupts();
 }
 /*
 void Board_Init(void){            
