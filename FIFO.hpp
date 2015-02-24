@@ -66,6 +66,7 @@ class FifoP : public Fifo<T>{
   T volatile * PutPt;
   T volatile * GetPt;
   T volatile FifoData[Size];
+  uint32_t FifoSize;
   uint32_t LostData;
   // enum Status {FAIL=-1, SUCCESS=0};
 
@@ -73,6 +74,7 @@ public:
   FifoP(){
     long sr;
     sr = StartCritical();
+    FifoSize = Size;
     PutPt = GetPt = &FifoData[0];
     EndCritical(sr);
   }
@@ -81,7 +83,7 @@ public:
     T volatile *nextPutPt;
     nextPutPt = PutPt + 1;
 
-    if(nextPutPt == &FifoData[Size]){
+    if(nextPutPt == &FifoData[FifoSize]){
       nextPutPt = &FifoData[0];
     }
     //if(nextPutPt == GetPt){
@@ -113,17 +115,19 @@ public:
     // }
     this->bWait();
     *data = *(GetPt++);
-    if(GetPt == &FifoData[Size]){
+    if(GetPt == &FifoData[FifoSize]){
       GetPt = &FifoData[0];
     }
     this->bSignal();
     // this->Signal();
     return SUCCESS;
   }
-
+  void setSize(uint32_t newSize){
+    FifoSize = newSize;
+  }
   unsigned short getSize(void){
     if(PutPt < GetPt){
-      return (unsigned short) (PutPt - GetPt + Size*sizeof(T))/sizeof(T);
+      return (unsigned short) (PutPt - GetPt + FifoSize*sizeof(T))/sizeof(T);
     }
     return (unsigned short)(PutPt - GetPt)/sizeof(T);
   }
