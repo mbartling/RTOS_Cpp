@@ -9,6 +9,7 @@
 #include "Switch.h"
 #include "Timer.h"
 #include "priority.h"
+#include "Mailbox.hpp"
 #define STACKSIZE 100
 #define SYSTICK_EN 1  
 #include "FIFO.hpp"
@@ -416,23 +417,88 @@ unsigned long OS_MsTime(void) {
     return systemTime/(TIME_1MS/Timer1APeriod);
 }
 
-/**********OS_FIFO******/
+ /********* OS_Fifo_Init ************
+ * Initialize the Fifo to be empty
+ * Inputs: size
+ * Outputs: none 
+ * In Lab 2, you can ignore the size field
+ * In Lab 3, you should implement the user-defined fifo size
+ * In Lab 3, you can put whatever restrictions you want on size
+ *    e.g., 4 to 64 elements
+ *    e.g., must be a power of 2,4,8,16,32,64,128
+ */
 #define FIFOSIZE 1024
 FifoP<unsigned long , FIFOSIZE> OS_Fifo;
-//
-//void OS_FIFO_Init() {
-//}
+void OS_Fifo_Init(unsigned long size) {
+}
 
-int OS_Fifo_Put(unsigned long data){
+ /********* OS_Fifo_Put ************
+ * Enter one data sample into the Fifo
+ * Called from the background, so no waiting 
+ * Inputs:  data
+ * Outputs: true if data is properly saved,
+ *          false if data not saved, because it was full
+ * Since this is called by interrupt handlers 
+ *  this function can not disable or enable interrupts
+ */
+
+int OS_Fifo_Put(unsigned long data) {
     return OS_Fifo.Put(data);
 }
 
-unsigned long OS_Fifo_Get(){
-    unsigned long  data; 
-    if (OS_Fifo.Get(&data)) {
-        return data;
-    }else {
-        printf("the get was not succesfull\n");
-        return 0; 
-    }
+ /********* OS_Fifo_Get ************
+ * Remove one data sample from the Fifo
+ * Called in foreground, will spin/block if empty
+ * Inputs:  none
+ * Outputs: data
+ */
+
+unsigned long OS_Fifo_Get(void) {
+    unsigned long  data;
+    OS_Fifo.Get(&data);
+    return data;
 }
+/********* OS_Fifo_Size ************
+ * Check the status of the Fifo
+ * Inputs: none
+ * Outputs: returns the number of elements in the Fifo
+ *          greater than zero if a call to OS_Fifo_Get will return right away
+ *          zero or less than zero if the Fifo is empty 
+ *          zero or less than zero if a call to OS_Fifo_Get will spin or block
+ */
+long OS_Fifo_Size(void) {
+    return OS_Fifo.getSize();
+}
+
+Mailbox<unsigned long> OSMailBox;
+/********* OS_MailBox_Init ************
+ * Initialize communication channel
+ * Inputs:  none
+ * Outputs: none
+ */
+void OS_MailBox_Init(void) {
+    return;
+}
+ /********* OS_MailBox_Send ************
+ * enter mail into the MailBox
+ * Inputs:  data to be sent
+ * Outputs: none
+ * This function will be called from a foreground thread
+ * It will spin/block if the MailBox contains data not yet received 
+ */
+void OS_MailBox_Send(unsigned long data) {
+    OSMailBox.Send(data);
+}
+ /********* OS_MailBox_Recv ************
+ * remove mail from the MailBox
+ * Inputs:  none
+ * Outputs: data received
+ * This function will be called from a foreground thread
+ * It will spin/block if the MailBox is empty 
+ */
+unsigned long OS_MailBox_Recv(void) {
+    unsigned long data; 
+    OSMailBox.Receive(data);
+   return data; 
+}
+

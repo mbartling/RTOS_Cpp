@@ -528,6 +528,7 @@ int ADC_Status(void)
 {
   return Collecting;
 }
+int counter = 0;
 void ADC0Seq2_Handler(void){
    ADC0_ISC_R = 0x04;          // acknowledge ADC sequence 2 completion
    ADCTask(ADC0_SSFIFO2_R); 
