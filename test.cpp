@@ -147,57 +147,57 @@ long jitter;                    // time between measured and expected, in us
 ////--------------end of Task 2-----------------------------
 //
 ////------------------Task 3--------------------------------
-//// hardware timer-triggered ADC sampling at 400Hz
-//// Producer runs as part of ADC ISR
-//// Producer uses fifo to transmit 400 samples/sec to Consumer
-//// every 64 samples, Consumer calculates FFT
-//// every 2.5ms*64 = 160 ms (6.25 Hz), consumer sends data to Display via mailbox
-//// Display thread updates LCD with measurement
-//
-////******** Producer *************** 
-//// The Producer in this lab will be called from your ADC ISR
-//// A timer runs at 400Hz, started by your ADC_Collect
-//// The timer triggers the ADC, creating the 400Hz sampling
-//// Your ADC ISR runs when ADC data is ready
-//// Your ADC ISR calls this function with a 12-bit sample 
-//// sends data to the consumer, runs periodically at 400Hz
-//// inputs:  none
-//// outputs: none
-//void Producer(unsigned long data){  
-//  if(NumSamples < RUNLENGTH){   // finite time run
-//    NumSamples++;               // number of samples
-//    if(OS_Fifo_Put(data) == 0){ // send to consumer
-//      DataLost++;
-//    } 
-//  } 
-//}
-//void Display(void); 
-//
-////******** Consumer *************** 
-//// foreground thread, accepts data from producer
-//// calculates FFT, sends DC component to Display
-//// inputs:  none
-//// outputs: none
-//void Consumer(void){ 
-//unsigned long data,DCcomponent;   // 12-bit raw ADC sample, 0 to 4095
-//unsigned long t;                  // time in 2.5 ms
-//unsigned long myId = OS_Id(); 
-//  ADC_Collect(5, FS, &Producer); // start ADC sampling, channel 5, PD2, 400 Hz
-//  NumCreated += OS_AddThread(&Display,128,0); 
-//  while(NumSamples < RUNLENGTH) { 
-//    PE2 = 0x04;
-//    for(t = 0; t < 64; t++){   // collect 64 ADC samples
-//      data = OS_Fifo_Get();    // get from producer
-//      x[t] = data;             // real part is 0 to 4095, imaginary part is 0
-//    }
-//    PE2 = 0x00;
-//    cr4_fft_64_stm32(y,x,64);  // complex FFT of last 64 ADC values
-//    DCcomponent = y[0]&0xFFFF; // Real part at frequency 0, imaginary part should be zero
-//    OS_MailBox_Send(DCcomponent); // called every 2.5ms*64 = 160ms
-//  }
-//  OS_Kill();  // done
-//}
-////******** Display *************** 
+// hardware timer-triggered ADC sampling at 400Hz
+// Producer runs as part of ADC ISR
+// Producer uses fifo to transmit 400 samples/sec to Consumer
+// every 64 samples, Consumer calculates FFT
+// every 2.5ms*64 = 160 ms (6.25 Hz), consumer sends data to Display via mailbox
+// Display thread updates LCD with measurement
+
+//******** Producer *************** 
+// The Producer in this lab will be called from your ADC ISR
+// A timer runs at 400Hz, started by your ADC_Collect
+// The timer triggers the ADC, creating the 400Hz sampling
+// Your ADC ISR runs when ADC data is ready
+// Your ADC ISR calls this function with a 12-bit sample 
+// sends data to the consumer, runs periodically at 400Hz
+// inputs:  none
+// outputs: none
+void Producer(unsigned long data){  
+  if(NumSamples < RUNLENGTH){   // finite time run
+    NumSamples++;               // number of samples
+    if(OS_Fifo_Put(data) == 0){ // send to consumer
+      DataLost++;
+    } 
+  } 
+}
+void Display(void); 
+
+//******** Consumer *************** 
+// foreground thread, accepts data from producer
+// calculates FFT, sends DC component to Display
+// inputs:  none
+// outputs: none
+void Consumer(void){ 
+unsigned long data,DCcomponent;   // 12-bit raw ADC sample, 0 to 4095
+unsigned long t;                  // time in 2.5 ms
+unsigned long myId = OS_Id(); 
+  ADC_Collect(5, FS, &Producer); // start ADC sampling, channel 5, PD2, 400 Hz
+  NumCreated += OS_AddThread(&Display,128,0); 
+  while(NumSamples < RUNLENGTH) { 
+    PE2 = 0x04;
+    for(t = 0; t < 64; t++){   // collect 64 ADC samples
+      data = OS_Fifo_Get();    // get from producer
+      x[t] = data;             // real part is 0 to 4095, imaginary part is 0
+    }
+    PE2 = 0x00;
+    cr4_fft_64_stm32(y,x,64);  // complex FFT of last 64 ADC values
+    DCcomponent = y[0]&0xFFFF; // Real part at frequency 0, imaginary part should be zero
+    OS_MailBox_Send(DCcomponent); // called every 2.5ms*64 = 160ms
+  }
+  OS_Kill();  // done
+}
+//******** Display *************** 
 //// foreground thread, accepts data from consumer
 //// displays calculated results on the LCD
 //// inputs:  none                            
@@ -215,6 +215,22 @@ long jitter;                    // time between measured and expected, in us
 //  OS_Kill();  // done
 //} 
 //
+void Display(void){ 
+unsigned long data,voltage;
+  
+  ST7735_Message(0,1,"Run length = ",(RUNLENGTH)/FS);   // top half used for Display
+  while(NumSamples < RUNLENGTH) { 
+    data = OS_MailBox_Recv();
+    voltage = 3000*data/4095;               // calibrate your device so voltage is in mV
+    PE3 = 0x08;
+    ST7735_Message(0,2,"v(mV) =",voltage);  
+    PE3 = 0x00;
+  } 
+  OS_Kill();  // done
+} 
+
+
+
 ////--------------end of Task 3-----------------------------
 //
 ////------------------Task 4--------------------------------

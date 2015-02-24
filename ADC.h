@@ -46,8 +46,9 @@ unsigned short ADC_In(void);
  * 
  * To be safe, buffer must be global buffer
  */
-int ADC_Collect(unsigned int channelNum, unsigned int fs,
-				unsigned short buffer[], unsigned int numberOfSamples);
+//int ADC_Collect(unsigned int channelNum, unsigned int fs, unsigned short buffer[], unsigned int numberOfSamples);
+
+int ADC_Collect(unsigned int channelNum, unsigned int fs, void (*task)(unsigned long));
 
 /**
  * @brief returns 0 when ADC_collect finishes
