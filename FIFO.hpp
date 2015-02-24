@@ -66,7 +66,7 @@ class FifoP : public Fifo<T>{
   T volatile * PutPt;
   T volatile * GetPt;
   T volatile FifoData[Size];
-  uint32_t FifoSize;
+  unsigned long FifoSize;
   uint32_t LostData;
   // enum Status {FAIL=-1, SUCCESS=0};
 
@@ -122,7 +122,7 @@ public:
     // this->Signal();
     return SUCCESS;
   }
-  void setSize(uint32_t newSize){
+  void setSize(unsigned long newSize){
     FifoSize = newSize;
   }
   unsigned long getSize(void){
