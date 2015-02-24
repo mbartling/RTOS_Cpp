@@ -10,7 +10,8 @@
 #include "Timer.h"
 #include "priority.h"
 #define STACKSIZE 100
-//#define SYSTICK_EN 1  
+#define SYSTICK_EN 1  
+#include "FIFO.hpp"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,9 +29,11 @@ void GPIOPortF_Handler(void);
 }
 #endif
 unsigned long systemTime= 0;
+unsigned long systemTime2= 0;
 int32_t ThreadCount = 0;
 // Tcb_t idleThreadMem;
 // Tcb_t* idleThread = &idleThreadMem;
+
 
 inline void Context_Switch(void){
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
@@ -41,9 +44,10 @@ inline void Context_Switch(void){
  * @param  input:  none
  * @return output: none
  */
+int Timer1APeriod = TIME_1MS/1000; // .1us 
+
 void OS_Init(void)
 {
-  int Timer1APeriod = 80; //80*12.5 = 1us 
   DisableInterrupts();
   PLL_Init();
   NVIC_SYS_PRI3_R = (NVIC_SYS_PRI3_R& ~NVIC_SYS_PRI3_PENDSV_M)|PendSVPriority; // priority 6
@@ -298,7 +302,6 @@ void OS_Launch(unsigned long theTimeSlice)
 //	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
   NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
 #endif
-  //EnableInterrupts();
   StartOS();
 }
 
@@ -316,6 +319,7 @@ void OS_Launch(unsigned long theTimeSlice)
 // In lab 3, there will be up to four background threads, and this priority field 
 //           determines the relative priority of these four threads
 //
+
 void (*SW1GlobalTask)(void);
 long SW1GlobalTaskPriority;
 int OS_AddSW1Task(void(*task)(void), unsigned long priority) {
@@ -325,15 +329,31 @@ int OS_AddSW1Task(void(*task)(void), unsigned long priority) {
     return 0;
 }
 
+void (*SW2GlobalTask)(void);
+long SW2GlobalTaskPriority;
+int OS_AddSW2Task(void(*task)(void), unsigned long priority) {
+    Board_Init();             // initialize PF0 and PF4 and make them inputs
+    SW2GlobalTask = task; 
+    SW2GlobalTaskPriority = priority; 
+    return 0;
+}
 /**
  * @brief this function takes care of the GPIOPortF_Handler. 
  * specific implementation for Lab2: calls that function that is was request once the osADDSW1Task was called
  */
 void GPIOPortF_Handler(void) {
-    GPIO_PORTF_ICR_R = 0x01; //acknowlegement
-    //OS_AddThread(SW1GlobalTask, STACKSIZE, SW1GlobalTaskPriority); //Note that the thread will kill itself after implemention (thus make sure the the function has OS_Kill in it)
-		SW1GlobalTask();
-    //fputc('o', stdout); //for debugging
+    if (GPIO_PORTF_RIS_R&0x10) {
+      GPIO_PORTF_ICR_R = 0x10; //acknowlegement
+      SW1GlobalTask();
+    }else if (GPIO_PORTF_RIS_R&0x1){
+      GPIO_PORTF_ICR_R = 0x1; //acknowlegement
+      SW2GlobalTask();
+    }
+    //}else if (SW2){
+//      SW2 = 0; 
+//      GPIO_PORTF_ICR_R = 0x1; //acknowlegement
+//      SW2GlobalTask();
+//    }
 }
 
 
@@ -341,14 +361,18 @@ void GPIOPortF_Handler(void) {
  * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
  */
 void Timer0A_Handler(void) {
+    systemTime2++;
     TIMER0_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
     GlobalPeriodicThread();
 }
 
+
+/**
+ * @brief used for measuring the time (this timer is used in OS_Time();
+ */
 void Timer1A_Handler(void) {
+   TIMER1_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
     systemTime++; 
-    TIMER1_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
-    GlobalPeriodicThread();
 }
 
 void SysTick_Handler(void){
@@ -364,7 +388,7 @@ void SysTick_Handler(void){
 
 
 unsigned long OS_Time() {
-    return systemTime;
+    return systemTime* (Timer1APeriod);
 }
 
 unsigned long OS_TimeDifference(unsigned long start, unsigned long stop) {
@@ -389,7 +413,26 @@ void OS_ClearMsTime(void) {
  * It is ok to make the resolution to match the first call to OS_AddPeriodicThread
  */
 unsigned long OS_MsTime(void) {
-   return 1;
+    return systemTime/(TIME_1MS/Timer1APeriod);
 }
 
+/**********OS_FIFO******/
+#define FIFOSIZE 1024
+FifoP<unsigned long , FIFOSIZE> OS_Fifo;
+//
+//void OS_FIFO_Init() {
+//}
 
+int OS_Fifo_Put(unsigned long data){
+    return OS_Fifo.Put(data);
+}
+
+unsigned long OS_Fifo_Get(){
+    unsigned long  data; 
+    if (OS_Fifo.Get(&data)) {
+        return data;
+    }else {
+        printf("the get was not succesfull\n");
+        return 0; 
+    }
+}

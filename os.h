@@ -308,6 +308,11 @@ unsigned long OS_MsTime(void);
  */
 
 void OS_Launch(unsigned long theTimeSlice);
+
+/**********OS_FIFO******/
+
+int OS_Fifo_Put(unsigned long);
+unsigned long OS_Fifo_Get();
 #ifdef __cplusplus
 extern "C" {
 #endif

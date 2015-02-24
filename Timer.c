@@ -80,7 +80,7 @@ void Timer1A_Init(uint32_t period){
   TIMER1_IMR_R  = 0x1;
   //NVIC_PRI5_R = (0x1<<13); 
   NVIC_PRI5_R = Timer1APriority;
-  NVIC_EN0_R =  1 <<23;
+  NVIC_EN0_R =  1 <<21;
 }
 
 
