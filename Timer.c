@@ -54,20 +54,33 @@
 // high is number of clock cycles output is high ((1/clockfreq) units)
 // duty cycle = high/period
 // assumes that period>high>(approx 3)
-void Timer0A_Init(uint32_t period){
-  volatile unsigned long delay;
-  SYSCTL_RCGCTIMER_R |= 0x01;      // activate timer0
-  TIMER0_CTL_R &= ~TIMER_CTL_TAEN; // disable timer0A during setup
-  TIMER0_CFG_R = 0x00000000;       //32 bit timer configuration
-  TIMER0_TAMR_R = (TIMER_TAMR_TAMR_PERIOD); //condfgure the timer as a periodic timer
-  TIMER0_TAILR_R = period - 1;       // timer start value (when ever timer gets to zero, it reloads this value)
-  //TIMER0_TAMATCHR_R = period-high-1; // duty cycle = high/period
-  TIMER0_CTL_R |= TIMER_CTL_TAEN;  // enable timer0A 16-b (this step is needed to enable the timer (do right before wanting the timer 
-  TIMER0_IMR_R  = 0x1;
-  NVIC_PRI4_R = Timer0APriority;
-  NVIC_EN0_R =  1 <<19;
-}
+//void Timer0A_Init(uint32_t period){
+//  volatile unsigned long delay;
+//  SYSCTL_RCGCTIMER_R |= 0x01;      // activate timer0
+//  TIMER0_CTL_R &= ~TIMER_CTL_TAEN; // disable timer0A during setup
+//  TIMER0_CFG_R = 0x00000000;       //32 bit timer configuration
+//  TIMER0_TAMR_R = (TIMER_TAMR_TAMR_PERIOD); //condfgure the timer as a periodic timer
+//  TIMER0_TAILR_R = period - 1;       // timer start value (when ever timer gets to zero, it reloads this value)
+//  //TIMER0_TAMATCHR_R = period-high-1; // duty cycle = high/period
+//  TIMER0_CTL_R |= TIMER_CTL_TAEN;  // enable timer0A 16-b (this step is needed to enable the timer (do right before wanting the timer 
+//  TIMER0_IMR_R  = 0x1;
+//  NVIC_PRI4_R = Timer0APriority;
+//  NVIC_EN0_R =  1 <<19;
+//}
 
+void Timer2A_Init(uint32_t period){
+  volatile unsigned long delay;
+  SYSCTL_RCGCTIMER_R |= 0x04;      // activate timer0
+  TIMER2_CTL_R &= ~TIMER_CTL_TAEN; // disable timer0A during setup
+  TIMER2_CFG_R = 0x00000000;       //32 bit timer configuration
+  TIMER2_TAMR_R = (TIMER_TAMR_TAMR_PERIOD); //condfgure the timer as a periodic timer
+  TIMER2_TAILR_R = period - 1;       // timer start value (when ever timer gets to zero, it reloads this value)
+  //TIMER0_TAMATCHR_R = period-high-1; // duty cycle = high/period
+  TIMER2_CTL_R |= TIMER_CTL_TAEN;  // enable timer0A 16-b (this step is needed to enable the timer (do right before wanting the timer 
+  TIMER2_IMR_R  = 0x1;
+  NVIC_PRI4_R = Timer2APriority;
+  NVIC_EN0_R =  1 <<23;
+}
 void Timer1A_Init(uint32_t period){
   volatile unsigned long delay;
   SYSCTL_RCGCTIMER_R |= 0x02;      // activate timer1    

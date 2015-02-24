@@ -45,7 +45,7 @@ void Timer0A_Init(uint32_t period);
 void PWM_Duty(uint16_t high);
 
 void Timer1A_Init(uint32_t period);
-
+void Timer2A_Init(uint32_t period);
 
 
 #ifdef __cplusplus
@@ -53,6 +53,7 @@ extern "C" {
 #endif
 void Timer0A_Handler(void);
 void Timer1A_Handler(void);
+void Timer2A_Handler(void);
 #ifdef __cplusplus
 }
 #endif
