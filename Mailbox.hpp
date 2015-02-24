@@ -15,7 +15,10 @@ private:
   Sema4Type semaAck;
   T Mail;
 public:
-
+  Mailbox(void) {
+    OS_InitSemaphore(&semaSend, 0);
+    OS_InitSemaphore(&semaAck, 0);
+  }
   /**
    * @brief Send data via a mailbox
    * 
