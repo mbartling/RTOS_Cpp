@@ -125,11 +125,11 @@ public:
   void setSize(uint32_t newSize){
     FifoSize = newSize;
   }
-  unsigned short getSize(void){
+  unsigned long getSize(void){
     if(PutPt < GetPt){
-      return (unsigned short) (PutPt - GetPt + FifoSize*sizeof(T))/sizeof(T);
+      return (unsigned long) (PutPt - GetPt + FifoSize*sizeof(T))/sizeof(T);
     }
-    return (unsigned short)(PutPt - GetPt)/sizeof(T);
+    return (unsigned long)(PutPt - GetPt)/sizeof(T);
   }
 };
 
