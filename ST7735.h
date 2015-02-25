@@ -81,7 +81,7 @@ enum initRFlags{
 #define ST7735_MAGENTA 0xF81F
 #define ST7735_YELLOW  0x07FF
 #define ST7735_WHITE   0xFFFF
-
+void ST7735_LCD_Init();
 //------------ST7735_InitB------------
 // Initialization for ST7735B screens.
 // Input: none
