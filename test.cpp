@@ -2,6 +2,7 @@
 #include "inc/tm4c123gh6pm.h"
 #include "ST7735.h"
 #include "ADC.h"
+#include "Perf.h"
 #include "interpreter.h"
 //#include "UART2.h"
 #include <string.h> 
@@ -18,22 +19,14 @@ short PID_stm32(short Error, short *Coeff);
 #ifdef __cplusplus
 }
 #endif
-unsigned long NumCreated;   // number of foreground threads created
-unsigned long PIDWork;      // current number of PID calculations finished
-unsigned long FilterWork;   // number of digital filter calculations finished
-unsigned long NumSamples;   // incremented every ADC sample, in Producer
+
 #define FS 400            // producer/consumer sampling
 #define RUNLENGTH (20*FS) // display results and quit when NumSamples==RUNLENGTH
 // 20-sec finite time experiment duration 
 
 #define PERIOD TIME_500US // DAS 2kHz sampling period in system time units
-long x[64],y[64];         // input and output arrays for FFT
 
 //---------------------User debugging-----------------------
-unsigned long DataLost;     // data sent by Producer, but not received by Consumer
-long MaxJitter;             // largest time jitter between interrupts in usec
-#define JITTERSIZE 64
-unsigned long const JitterSize=JITTERSIZE;
 unsigned long JitterHistogram[JITTERSIZE]={0,};
 #define PE0  (*((volatile unsigned long *)0x40024004))
 #define PE1  (*((volatile unsigned long *)0x40024008))
