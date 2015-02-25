@@ -19,7 +19,6 @@ int Command_disp_message(char * args);
 int Command_list(char * args);
 int Command_adc_open(char *args);
 int Command_adc_in(char *args);
-int Command_adc_collect(char *args);
 int Command_perf(char* args);
 int Command_x(char* args);
 int Command_y(char* args);
@@ -36,7 +35,6 @@ struct command commands[] =
   COMMAND(disp_message),
   COMMAND(adc_open),
   COMMAND(adc_in),       //{"adc_in", Command_adc_in}
-  COMMAND(adc_collect),
   COMMAND(perf),
   COMMAND(x),
   COMMAND(y)
@@ -122,49 +120,21 @@ int Command_adc_in(char *args)
   return result;
 }
 
-unsigned short buffer[512];
-int Command_adc_collect(char *args)
-{
-  unsigned int channelNum, fs;
-  unsigned int numberOfSamples;
-
-  sscanf(args, "%u %u %u", &channelNum, &fs, &numberOfSamples);
-  if (numberOfSamples > 512){
-    printf("Number of samples must be less than 512\n");
-    return -1;
-  }  
-  if((numberOfSamples & 1) == 1){ //If numberOfSamples is odd
-    printf("Number of samples must be even\n");
-    return -2;
-  }
-
-  ADC_Collect(channelNum, fs, buffer, numberOfSamples);
-
-  //Wait until ADC_collect finishes
-  while(ADC_Status()){}
-
-  //print out the values
-  printf("Done Collecting\nHere are the results:\n");
-  int i;
-  for(i = 0; i < numberOfSamples; i++)
-  {
-    printf("%f\t", ((float) buffer[i]) * 3.3/4096.0);
-  }
-  return 1;
-}
 
 int Command_perf(char* args){
   printf("\nJitter: %dNumSamples: %d\nNumCreated: %d\nDataLost: %d", jitter, NumSamples, NumCreated, DataLost  );
 }
 int Command_x(char* args){
-  for(int i = 0;, i < 64; ++i){
+	int i;
+  for(i = 0; i < 64; i++){
     printf("\n");
     printf("%d\t", x[i]);
   }
   return 1;
 }
 int Command_y(char* args){
-  for(int i = 0;, i < 64; ++i){
+	int i;
+  for( i = 0; i < 64; i++){
     printf("\n");
     printf("%d\t", y[i]);
   }
