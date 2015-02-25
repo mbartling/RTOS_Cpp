@@ -3,7 +3,7 @@
 #define __DEBUG_SETTINGS_H__
 
 //Top Definitions
-#define DEBUG_ENABLED  1
+#define DEBUG_ENABLED  0
 #define DEBUG_DISABLED 0
 
 
