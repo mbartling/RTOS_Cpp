@@ -56,7 +56,7 @@
 #include "ST7735.h"
 #include "inc/tm4c123gh6pm.h"
 #include "ST7735_debug.h"
-
+#include "os.h"
 // typedef unsigned int uint32_t;
 // typedef unsigned short uint16_t;
 // typedef unsigned char uint8_t;
@@ -1591,9 +1591,15 @@ void Output_Color(uint32_t newColor){ // Set color of future output
 // Input: line number [0-3]
 // Input: c string, Note will not automatically wrap
 // Input: value to display
+
+Sema4Type LCDFree;
+void ST7735_LCD_Init() {
+    OS_InitSemaphore(&LCDFree, 1);
+}
 void ST7735_Message(IN int device, IN int line, IN char* string, IN long value)
 {
   char str_buff[32];
+  OS_bWait(&LCDFree); 
   if(line < 0 || line > 3){
     DEBUG_ST7735_PRINTF("Invalid Line, returning%c", '\n');
     return;
@@ -1620,5 +1626,6 @@ void ST7735_Message(IN int device, IN int line, IN char* string, IN long value)
 	//79 = 160/2 - 1 = _height/2 - 1
   ST7735_DrawFastHLine(0, 79, _width, color);
 
+  OS_bSignal(&LCDFree); 
   return;
 }

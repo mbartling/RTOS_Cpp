@@ -45,7 +45,7 @@ inline void Context_Switch(void){
  * @param  input:  none
  * @return output: none
  */
-int Timer1APeriod = TIME_1MS/4; // .1us 
+int Timer1APeriod = TIME_1MS/1000; // .1us 
 
 void OS_Init(void)
 {
@@ -350,11 +350,6 @@ void GPIOPortF_Handler(void) {
       GPIO_PORTF_ICR_R = 0x1; //acknowlegement
       SW2GlobalTask();
     }
-    //}else if (SW2){
-//      SW2 = 0; 
-//      GPIO_PORTF_ICR_R = 0x1; //acknowlegement
-//      SW2GlobalTask();
-//    }
 }
 
 
@@ -380,7 +375,7 @@ void Timer2A_Handler(void) {
  */
 void Timer1A_Handler(void) {
    TIMER1_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
-    systemTime++; 
+   systemTime++; 
 }
 
 void SysTick_Handler(void){
