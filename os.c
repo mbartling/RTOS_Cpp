@@ -45,7 +45,7 @@ inline void Context_Switch(void){
  * @param  input:  none
  * @return output: none
  */
-int Timer1APeriod = TIME_1MS/1000; // .1us 
+int Timer1APeriod = TIME_1MS/4; // .1us 
 
 void OS_Init(void)
 {
@@ -219,7 +219,7 @@ int OS_AddPeriodicThread(void(*task)(void),
         unsigned long period, unsigned long priority){
     long status = StartCritical();
     GlobalPeriodicThread = task;
-    Timer0A_Init((uint32_t)period);
+    Timer2A_Init((uint32_t)period);
     EndCritical(status);
     return 1;
 }
@@ -361,13 +361,20 @@ void GPIOPortF_Handler(void) {
 /**
  * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
  */
-void Timer0A_Handler(void) {
+//void Timer0A_Handler(void) {
+//    systemTime2++;
+//    TIMER0_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
+//    GlobalPeriodicThread();
+//}
+
+/**
+ * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
+ */
+void Timer2A_Handler(void) {
     systemTime2++;
-    TIMER0_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
+    TIMER2_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
     GlobalPeriodicThread();
 }
-
-
 /**
  * @brief used for measuring the time (this timer is used in OS_Time();
  */
