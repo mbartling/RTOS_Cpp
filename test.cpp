@@ -2,12 +2,12 @@
 #include "inc/tm4c123gh6pm.h"
 #include "ST7735.h"
 #include "ADC.h"
-
+#include "interpreter.h"
 //#include "UART2.h"
 #include <string.h> 
 #include <stdio.h> 
 //#define TESTMAIN 4
-#define Task1
+//#define Task1
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -112,31 +112,31 @@ long jitter;                    // time between measured and expected, in us
 //// one foreground task created with button push
 //// foreground treads run for 2 sec and die
 //// ***********ButtonWork*************
-//void ButtonWork(void){
-//unsigned long myId = OS_Id(); 
-//  PE1 ^= 0x02;
-//  ST7735_Message(1,0,"NumCreated =",NumCreated); 
-//  PE1 ^= 0x02;
-//  OS_Sleep(50);     // set this to sleep for 50msec
-//  ST7735_Message(1,1,"PIDWork     =",PIDWork);
-//  ST7735_Message(1,2,"DataLost    =",DataLost);
-//  ST7735_Message(1,3,"Jitter 0.1us=",MaxJitter);
-//  PE1 ^= 0x02;
-//  OS_Kill();  // done, OS does not return from a Kill
-//} 
+void ButtonWork(void){
+unsigned long myId = OS_Id(); 
+  PE1 ^= 0x02;
+  ST7735_Message(1,0,"NumCreated =",NumCreated); 
+  PE1 ^= 0x02;
+  OS_Sleep(50);     // set this to sleep for 50msec
+  ST7735_Message(1,1,"PIDWork     =",PIDWork);
+  ST7735_Message(1,2,"DataLost    =",DataLost);
+  ST7735_Message(1,3,"Jitter 0.1us=",MaxJitter);
+  PE1 ^= 0x02;
+  OS_Kill();  // done, OS does not return from a Kill
+} 
 //
 ////************SW1Push*************
 //// Called when SW1 Button pushed
 //// Adds another foreground task
 //// background threads execute once and return
-//void SW1Push(void){
-//  if(OS_MsTime() > 20){ // debounce
-//    if(OS_AddThread(&ButtonWork,100,4)){
-//      NumCreated++; 
-//    }
-//    OS_ClearMsTime();  // at least 20ms between touches
-//  }
-//}
+void SW1Push(void){
+  if(OS_MsTime() > 20){ // debounce
+    if(OS_AddThread(&ButtonWork,100,4)){
+      NumCreated++; 
+    }
+    OS_ClearMsTime();  // at least 20ms between touches
+  }
+}
 ////************SW2Push*************
 //// Called when SW2 Button pushed, Lab 3 only
 //// Adds another foreground task
@@ -293,33 +293,35 @@ unsigned long data,voltage;
 //
 //
 ////*******************final user main DEMONTRATE THIS TO TA**********
-//int main(void){ 
-//  OS_Init();           // initialize, disable interrupts
-//  PortE_Init();
-//  DataLost = 0;        // lost data between producer and consumer
-//  NumSamples = 0;
-//  MaxJitter = 0;       // in 1us units
-//
-////********initialize communication channels
-//  OS_MailBox_Init();
-//  OS_Fifo_Init(128);    // ***note*** 4 is not big enough*****
-//
-////*******attach background tasks***********
-//  OS_AddSW1Task(&SW1Push,2);
+int main(void){ 
+  OS_Init();           // initialize, disable interrupts
+  PortE_Init();
+  DataLost = 0;        // lost data between producer and consumer
+  NumSamples = 0;
+  MaxJitter = 0;       // in 1us units
+
+//********initialize communication channels
+  OS_MailBox_Init();
+  OS_Fifo_Init(128);    // ***note*** 4 is not big enough*****
+
+//*******attach background tasks***********
+  OS_AddSW1Task(&SW1Push,2);
 ////  OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
-//  ADC_Init(4);  // sequencer 3, channel 4, PD3, sampling in DAS()
-//  OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
-//
-//  NumCreated = 0 ;
-//// create initial foreground threads
-//  NumCreated += OS_AddThread(&Interpreter,128,2); 
-//  NumCreated += OS_AddThread(&Consumer,128,1); 
-//  NumCreated += OS_AddThread(&PID,128,3);  // Lab 3, make this lowest priority
-// 
-//  OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
-//  return 0;            // this never executes
-//}
-//
+  //ADC_Init(4);  // sequencer 3, channel 4, PD3, sampling in DAS()
+	ADC_Open(4);
+  OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
+
+  NumCreated = 0 ;
+// create initial foreground threads
+  //NumCreated += OS_AddThread(&interpreter,128,2); 
+  NumCreated += OS_AddThread(&Consumer,128,1); 
+  //NumCreated += OS_AddThread(&PID,128,3);  // Lab 3, make this lowest priority
+  ST7735_Message(1,0,"NumCreated =",NumCreated); 
+
+  OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
+  return 0;            // this never executes
+}
+
 //+++++++++++++++++++++++++DEBUGGING CODE++++++++++++++++++++++++
 // ONCE YOUR RTOS WORKS YOU CAN COMMENT OUT THE REMAINING CODE
 // 
