@@ -71,7 +71,6 @@ void DAS(void){
 unsigned long input;  
 unsigned static long LastTime;  // time at previous ADC sample
 unsigned long thisTime;         // time at current ADC sample
-long jitter;                    // time between measured and expected, in us
   if(NumSamples < RUNLENGTH){   // finite time run
     PE0 ^= 0x01;
     input = ADC_In();           // channel set when calling ADC_Init
