@@ -1,6 +1,5 @@
 #ifndef __PERF_H__
 #define __PERF_H__
-
 unsigned long NumCreated;   // number of foreground threads created
 unsigned long PIDWork;      // current number of PID calculations finished
 unsigned long FilterWork;   // number of digital filter calculations finished

@@ -48,9 +48,9 @@ struct command commands[] =
  Want support for get, set, route, and list
 */
 
-void interpreter(void){
-  char buffer[64];
+char buffer[64];
   char m_command[16];
+void interpreter(void){
   char *buff_ptr = buffer;
   struct command* command_ptr = commands;
   struct command* end_ptr = command_ptr + sizeof(commands)/sizeof(commands[0]);
@@ -61,12 +61,13 @@ void interpreter(void){
 	fgets(buffer, 64, stdin);
 	sscanf(buff_ptr, "%s%n", m_command, &n);
 	printf("m_command: %s\n", m_command);
-	buff_ptr += n;
-	printf("Buffer: %s\n", buff_ptr);
+    buff_ptr += n;
+	printf("%s\n", buff_ptr);
+    //printf("Buffer: %s\n", buff_ptr);
   while (command_ptr < end_ptr){
     function = command_ptr->function;
     if(strcmp(m_command, command_ptr->label) == 0){
-			printf("Doing Command: %s\n", command_ptr->label);
+//			printf("Doing Command: %s\n", command_ptr->label);
       function(buff_ptr);
 			
       return;
@@ -122,13 +123,13 @@ int Command_adc_in(char *args)
 
 
 int Command_perf(char* args){
-  printf("\nJitter: %dNumSamples: %d\nNumCreated: %d\nDataLost: %d", jitter, NumSamples, NumCreated, DataLost  );
+  printf("\nJitter: %d\nNumSamples: %d\nNumCreated: %d\nDataLost: %d\n", jitter, NumSamples, NumCreated, DataLost  );
 }
 int Command_x(char* args){
 	int i;
   for(i = 0; i < 64; i++){
     printf("\n");
-    printf("%d\t", x[i]);
+    printf("%ld\t", (3000*x[i])/4096);
   }
   return 1;
 }
@@ -136,7 +137,7 @@ int Command_y(char* args){
 	int i;
   for( i = 0; i < 64; i++){
     printf("\n");
-    printf("%d\t", y[i]);
+    printf("%ld\t", y[i]);
   }
   return 1;
 }

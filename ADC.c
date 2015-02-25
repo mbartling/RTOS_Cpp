@@ -532,6 +532,7 @@ int counter = 0;
 void ADC0Seq2_Handler(void){
    ADC0_ISC_R = 0x04;          // acknowledge ADC sequence 2 completion
    ADCTask(ADC0_SSFIFO2_R); 
+   ADCTask(ADC0_SSFIFO2_R); 
 }
 //void ADC0Seq2_Handler(void){
 //  if(Collecting > 0){

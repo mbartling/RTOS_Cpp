@@ -31,6 +31,8 @@ void GPIOPortF_Handler(void);
 #endif
 unsigned long systemTime= 0;
 unsigned long systemTime2= 0;
+volatile unsigned long systemTime3= 0;
+volatile unsigned long systemPeriod = 0;
 int32_t ThreadCount = 0;
 // Tcb_t idleThreadMem;
 // Tcb_t* idleThread = &idleThreadMem;
@@ -55,7 +57,7 @@ void OS_Init(void)
 #ifdef SYSTICK_EN
   SysTick_Init(160000); //2 Ms period default
 #endif
-  Timer1A_Init((uint32_t)Timer1APeriod);
+//  Timer1A_Init((uint32_t)Timer1APeriod);
   UART0_Init();
   TCB_Configure_IdleThread(); //Set up the idle thread
 }
@@ -295,15 +297,15 @@ void OS_Suspend(void)
 // In Lab 2, you can ignore the theTimeSlice field
 // In Lab 3, you should implement the user-defined TimeSlice field
 // It is ok to limit the range of theTimeSlice to match the 24-bit SysTick
-void OS_Launch(unsigned long theTimeSlice)
-{
+void OS_Launch(unsigned long theTimeSlice){
+    systemPeriod = theTimeSlice;
 #ifdef SYSTICK_EN
-	
-  NVIC_ST_RELOAD_R = theTimeSlice - 1;
-//	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
-  NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
+
+    NVIC_ST_RELOAD_R = theTimeSlice - 1;
+    //	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
+    NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
 #endif
-  StartOS();
+    StartOS();
 }
 
 //******** OS_AddSW1Task *************** 
@@ -387,11 +389,13 @@ void SysTick_Handler(void){
     EndCritical(status);
     //Context_Switch();
     NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    systemTime3++;
 }
 
 
 unsigned long OS_Time() {
-    return systemTime* (Timer1APeriod);
+    return systemTime3*(systemPeriod) + systemPeriod - NVIC_ST_CURRENT_R;
+   // return systemTime* (Timer1APeriod);
 }
 
 unsigned long OS_TimeDifference(unsigned long start, unsigned long stop) {
@@ -405,7 +409,7 @@ unsigned long OS_TimeDifference(unsigned long start, unsigned long stop) {
  * You are free to change how this works
  */
 void OS_ClearMsTime(void) {
-    systemTime = 0;
+    systemTime3 = 0;
 }
 
  /********* OS_MsTime ************
@@ -416,7 +420,7 @@ void OS_ClearMsTime(void) {
  * It is ok to make the resolution to match the first call to OS_AddPeriodicThread
  */
 unsigned long OS_MsTime(void) {
-    return systemTime/(TIME_1MS/Timer1APeriod);
+    return  (systemTime3*(systemPeriod) + systemPeriod - NVIC_ST_CURRENT_R)/TIME_1MS;
 }
 
  /********* OS_Fifo_Init ************
@@ -429,7 +433,7 @@ unsigned long OS_MsTime(void) {
  *    e.g., 4 to 64 elements
  *    e.g., must be a power of 2,4,8,16,32,64,128
  */
-#define FIFOSIZE 1024
+#define FIFOSIZE 1028 
 FifoP<unsigned long , FIFOSIZE> OS_Fifo;
 void OS_Fifo_Init(unsigned long size) {
 }
@@ -445,10 +449,9 @@ void OS_Fifo_Init(unsigned long size) {
  */
 
 int OS_Fifo_Put(unsigned long data) {
-    return OS_Fifo.Put(data);
+    return OS_Fifo.Put(data) ? 1 : 0;
 }
-
- /********* OS_Fifo_Get ************
+/********* OS_Fifo_Get ************
  * Remove one data sample from the Fifo
  * Called in foreground, will spin/block if empty
  * Inputs:  none
