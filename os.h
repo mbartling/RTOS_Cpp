@@ -309,7 +309,13 @@ unsigned long OS_MsTime(void);
 
 void OS_Launch(unsigned long theTimeSlice);
 
-/**********OS_FIFO******/
+
+/**
+ * @brief This function is used for stand alone testing, when we don't want to launch the os. It activates the PLL and UART so we can talk to the terminal and print values
+ */
+void OS_setupTest(void);
+
+    /**********OS_FIFO******/
 
 int OS_Fifo_Put(unsigned long);
 unsigned long OS_Fifo_Get();

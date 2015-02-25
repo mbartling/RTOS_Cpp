@@ -59,6 +59,7 @@ void OS_Init(void)
 #endif
 //  Timer1A_Init((uint32_t)Timer1APeriod);
   UART0_Init();
+  EnableInterrupts(); 
   TCB_Configure_IdleThread(); //Set up the idle thread
 }
 
@@ -275,14 +276,12 @@ void OS_Kill(void) {
 void OS_Suspend(void)
 {
 		
-	  long status = StartCritical();
-    Tcb_t * runningThread = TCB_GetRunningThread();
-    runningThread-> state_sleep = 0;
-    TCB_RemoveRunningAndSleep();
-  //  TCB_UpdateSleeping();
-    // TCB_CheckSleeping();
+    //	long status = StartCritical();
+//    Tcb_t * runningThread = TCB_GetRunningThread();
+//    runningThread-> state_sleep = 0;
+//    TCB_RemoveRunningAndSleep();
     //If running list empty then insert idle task
-	  EndCritical(status);
+//	  EndCritical(status);
   //This is where we would do any scheduling
 	
     Context_Switch();
@@ -433,7 +432,7 @@ unsigned long OS_MsTime(void) {
  *    e.g., 4 to 64 elements
  *    e.g., must be a power of 2,4,8,16,32,64,128
  */
-#define FIFOSIZE 1028 
+#define FIFOSIZE 32 
 FifoP<unsigned long , FIFOSIZE> OS_Fifo;
 void OS_Fifo_Init(unsigned long size) {
 }
@@ -506,4 +505,18 @@ unsigned long OS_MailBox_Recv(void) {
     OSMailBox.Receive(data);
    return data; 
 }
+
+/**
+ * @brief This function is used for stand alone testing, when we don't want to launch the os. It activates the PLL and UART so we can talk to the terminal and print values
+ */
+void OS_setupTest(void)
+{
+  DisableInterrupts();
+  PLL_Init();
+  UART0_Init();
+  EnableInterrupts(); 
+}
+
+
+
 
