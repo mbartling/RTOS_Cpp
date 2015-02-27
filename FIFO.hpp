@@ -16,7 +16,13 @@ void EndCritical(long sr);    // restore I bit to previous value
 
 #define SUCCESS true
 #define FAIL false
-	
+
+/**
+ * @brief Base Class Fifo
+ * @details Todo: make get, put, and getsize virtual
+ * 
+ * @tparam T type of Fifo
+ */
 //template <typename T>
  class Fifo{
  	// enum Status {FAIL=-1, SUCCESS=0};
@@ -42,16 +48,16 @@ void EndCritical(long sr);    // restore I bit to previous value
 //  virtual bool Get(T* data){
 //    return (FAIL);
 //  }
-  inline void Wait(){
+  inline void Wait_s2(){
     OS_Wait(&s2);
   }
-  inline void bWait(){
+  inline void Wait_s1(){
     OS_Wait(&s1);
   }
-  inline void Signal(){
+  inline void Signal_s2(){
     OS_Signal(&s2);
   }
-  inline void bSignal(){
+  inline void Signal_s1(){
     OS_Signal(&s1);
   }
   inline void set_s1(int val){
@@ -66,12 +72,14 @@ void EndCritical(long sr);    // restore I bit to previous value
  };
  /**
  * @brief Pointer type Fifo
- * @details [long description]
+ * @details Never fails, good for multiple consumers and multiple
+ * producers. Doesnt work well for background thread because it blocks
+ * both put and get.
  *  
- *  Wait uses Room Left
- *  bWait Uses CurrentSize 
- * @tparam T [description]
- * @tparam Size [description]
+ *  Wait_s2 uses Room Left
+ *  Wait_s1 Uses CurrentSize 
+ * @tparam T Type of data in Fifo
+ * @tparam Size maximum size of fifo
  */
 template <typename T, int Size>
 class FifoP : public Fifo{
@@ -100,29 +108,29 @@ public:
 
   bool Put(T data){
   
-    this->Wait(); //Wait for room left
+    this->Wait_s2(); //Wait for room left
     Slot();       //wait for mutex
     *(PutPt++) = data;
     if(PutPt == &FifoData[FifoSize]){
       PutPt = &FifoData[0];
     }
     freeMutex();   // free mutex
-    this->bSignal();  //Update CurrentSize
+    this->Signal_s1();  //Update CurrentSize
     return SUCCESS;
   }
 
   bool Get(T *data){
 
-    this->bWait(); //Wait till have something available
-//    this->bWait();
+    this->Wait_s1(); //Wait till have something available
+//    this->Wait_s1();
 		Slot();        //Wait for mutex
     *data = *(GetPt++);
     if(GetPt == &FifoData[FifoSize]){
       GetPt = &FifoData[0];
     }
     freeMutex();     //free mutex
-    this->Signal(); 
-    // this->Signal();
+    this->Signal_s2(); 
+    // this->Signal_s2();
     return SUCCESS;
   }
   void setSize(unsigned long newSize){
@@ -144,8 +152,8 @@ public:
  * @brief Pointer type Fifo Better for Single Producer Multiple Consumers
  * @details [long description]
  * 
- * @tparam T [description]
- * @tparam Size [description]
+ * @tparam T Type of data in Fifo
+ * @tparam Size maximum size of fifo
  */
 template <typename T, int Size>
 class FifoP_SP2MC : public Fifo{
@@ -172,40 +180,29 @@ public:
     if(nextPutPt == &FifoData[FifoSize]){
       nextPutPt = &FifoData[0];
     }
-    //if(nextPutPt == GetPt){
-      // return(FAIL);
-    
-    // while(nextPutPt == GetPt){
-      // this->Wait();
-    // }
-  //}
+
     if(nextPutPt == GetPt){
       LostData++;
     }
    else{
       *(PutPt) = data;
       PutPt = nextPutPt;
-      this->Signal();
+      this->Signal_s2();
       return(SUCCESS);
-      // return true;
+
     }
 	 return(FAIL);
   }
 
   bool Get(T *data){
-    // if(PutPt == GetPt){
-      // return(FAIL);
-    // }
-    // while(GetPt == PutPt){
-    this->Wait(); //Wait till available
-    // }
-    this->bWait();
+    this->Wait_s2(); //Wait till available
+
+    this->Wait_s1(); //data mutex
     *data = *(GetPt++);
     if(GetPt == &FifoData[FifoSize]){
       GetPt = &FifoData[0];
     }
-    this->bSignal();
-    // this->Signal();
+    this->Signal_s1();//end data mutex
     return SUCCESS;
   }
   void setSize(unsigned long newSize){
@@ -225,8 +222,8 @@ public:
  * @brief Pointer type Fifo Better for Multiple producers single consumer
  * @details [long description]
  * 
- * @tparam T [description]
- * @tparam Size [description]
+ * @tparam T Type of data in Fifo
+ * @tparam Size maximum size of fifo
  */
 template <typename T, int Size>
 class FifoP_MP2SC : public Fifo{
@@ -253,42 +250,22 @@ public:
     if(nextPutPt == &FifoData[FifoSize]){
       nextPutPt = &FifoData[0];
     }
-    //if(nextPutPt == GetPt){
-      // return(FAIL);
-    
-    // while(nextPutPt == GetPt){
-      // this->Wait();
-    // }
-  //}
-    // if(nextPutPt == GetPt){
-      // LostData++;
-    // }
-   // else{
-      this->Wait();
-      this->bWait();
+
+      this->Wait_s2();
+      this->Wait_s1();
       *(PutPt) = data;
       PutPt = nextPutPt;
-      this->bSignal();
+      this->Signal_s1();
       return(SUCCESS);
-      // return true;
-    // }
-   // return(FAIL);
   }
 
   bool Get(T *data){
-    // if(PutPt == GetPt){
-      // return(FAIL);
-    // }
-    // while(GetPt == PutPt){
-    // this->Wait(); //Wait till available
-    // }
-    // this->bWait();
+
     *data = *(GetPt++);
     if(GetPt == &FifoData[FifoSize]){
       GetPt = &FifoData[0];
     }
-    // this->bSignal();
-    this->Signal(); //I have free space
+    this->Signal_s2(); //I have free space
     return SUCCESS;
   }
   void setSize(unsigned long newSize){
