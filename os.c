@@ -59,7 +59,7 @@ void OS_Init(void)
 #endif
 //  Timer1A_Init((uint32_t)Timer1APeriod);
   UART0_Init();
-  EnableInterrupts(); 
+  //EnableInterrupts(); 
   TCB_Configure_IdleThread(); //Set up the idle thread
 }
 
