@@ -16,8 +16,8 @@
 //#define Task3
 //#define Task4
 //#define Task5
-#define Task6 //testing the fft filter
-//#define mainTaskLab2
+//#define Task6 //testing the fft filter
+#define mainTaskLab2
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 #ifdef __cplusplus
 extern "C" {
@@ -704,16 +704,33 @@ int main(void){   // Testmain4
 
 //
 #ifdef Task6
+ void dummyThread(void){
+	 int counter = 0;
+	for(int j = 0; j < 100; j++){
+		for (int i = 0 ; i < 64; i++) {
+      x[i] = 0;
+		}
+		x[0] = j;
+		cr4_fft_64_stm32(y,x,64);  // complex FFT of last 64 ADC values
+		printf("y is %d\n", j);
+		for(int i = 0; i < 64; i++){
+			printf("(%d + i%d)\t",(short)(y[i] & 0xFFFF), (short)(y[i] >> 16));
+			//printf("%d\t", counter);
+			counter++;
+		}
+		printf("\n\n");
+	//OS_Sleep(5);
+}
+	 OS_Kill();
+ }
 int main(void){   // Testmain4
   PortE_Init();       // profile user threads
-  OS_setupTest() ; 
-  for (int i = 0 ; i < 64; i++) {
-      x[i] = 4097;
-  }
-  cr4_fft_64_stm32(y,x,64);  // complex FFT of last 64 ADC values
-  for(int i = 0; i < 64; i++){
-      printf("y is %ld\t ", y[i]);
-  }
+  //OS_setupTest() ;
+	OS_Init();
+	OS_AddThread(dummyThread,100,5);
+	OS_AddThread(Interpreter,100,5);
+	OS_Launch(TIME_2MS);
+
 } 
 #endif
 

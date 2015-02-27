@@ -81,8 +81,10 @@ void UART0_Handler(void);
                               // create index implementation FIFO (see FIFO.h)
 // AddIndexFifo(Rx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
 // AddIndexFifo(Tx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
-FifoP<char, FIFOSIZE> Rx0Fifo;
-FifoP<char, FIFOSIZE> Tx0Fifo;
+FifoP_SP2MC<char, FIFOSIZE> Rx0Fifo;
+FifoP_MP2SC<char, FIFOSIZE> Tx0Fifo;
+// FifoP<char, FIFOSIZE> Tx0Fifo;
+
 // Initialize UART0
 // Baud rate is 115200 bits/sec
 void UART0_Init(void){
