@@ -6,18 +6,12 @@
 // #include <iostream>
 #define DEBUGprintf(...) /**/
 
-#define NUM_PRIORITIES 7
-
 List<Tcb_t*, MAXNUMTHREADS> SleepingList;
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
 Tcb_t* RunningThread = NULL;
 Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
 // Tcb_t DummyThread;
-
-
-List<Tcb_t*, MAXNUMTHREADS> PriorityList[NUM_PRIORITIES];
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,30 +77,6 @@ void TCB_SetInitialStack(Tcb_t* pTcb)
 
 }
 
-void TCB_PushBackRunning(void){
-    //push the running thread to end of its list if necessary
-  if(RunningThread != idleThread){
-    //TODO push to sleeping list if necessary
-    PriorityList[RunningThread->priority].push_back(RunningThread); 
-  }
-}
-/**
- * @brief The scheduler just picks the next thread to run
- * @details nothing more, nothing less
- */
-void TCB_Scheduler(void){
-
-  // Pick Running Thread Next
-  for(int i = 0;  i < NUM_PRIORITIES; ++i){
-    if(!PriorityList[i].isEmpty()){
-      RunningThread->next = PriorityList[i].pop_front();
-      break;    
-    }
-  }
-  //Post Process such as pushing something to sleeping list
-  return;
-}
-
 int TCB_Available(void){
   return ThreadPool.available();
 }
@@ -124,21 +94,19 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
 {
   long status;
   status = StartCritical();
-  // Tcb_t* thread = RunningThread->next->prev;  //<! Cheap trick to help maintain list
-  //                                             //<! on Context switch
+  Tcb_t* thread = RunningThread->next->prev;  //<! Cheap trick to help maintain list
+                                              //<! on Context switch
 
-  // if(ThreadList.count > 0){
-  //   node->next = thread;
-  //   node->prev = thread->prev;
-  //   thread->prev = node;
-  //   node->prev->next = node;
-  // }else {
-  //   ThreadList.head = node;  //<! Replace Idle Thread with node
-  //   RunningThread->next = node;
-  //   RunningThread->prev = node;
-  // }
-  PriorityList[node->priority].push_back(node); 
-
+  if(ThreadList.count > 0){
+    node->next = thread;
+    node->prev = thread->prev;
+    thread->prev = node;
+    node->prev->next = node;
+  }else {
+    ThreadList.head = node;  //<! Replace Idle Thread with node
+    RunningThread->next = node;
+    RunningThread->prev = node;
+  }
   ThreadList.count++;
   EndCritical(status);
 
@@ -159,37 +127,33 @@ void TCB_RemoveRunningThread(void) {
    EndCritical(status);
 
    return; // Never remove idle thread
-  }
+ }
 
-  if(ThreadList.count > 1){
-  // (RunningThread->prev)->next = RunningThread->next;  //Update thread list
-  // (RunningThread->next)->prev = RunningThread->prev;  //Update thread list
+ if(ThreadList.count > 1){
+  (RunningThread->prev)->next = RunningThread->next;  //Update thread list
+  (RunningThread->next)->prev = RunningThread->prev;  //Update thread list
 
-    ThreadList.count--;
-  }else if(ThreadList.count == 1){
+  ThreadList.count--;
+}else if(ThreadList.count == 1){
   
   idleThread->next = idleThread;
   idleThread->prev = idleThread;
-  RunningThread->next = idleThread; //Make Sure to never call sleep on idle thread
-  ThreadList.head = idleThread;     //Make Sure to never call sleep on idle thread 
+        RunningThread->next = idleThread; //Make Sure to never call sleep on idle thread
+        ThreadList.head = idleThread;     //Make Sure to never call sleep on idle thread 
 
-  ThreadList.count--;
+        ThreadList.count--;
       } 
-  ThreadPool.free(RunningThread); // Free the thread in memory
-  EndCritical(status);
+      ThreadPool.free(RunningThread); // Free the thread in memory
+      EndCritical(status);
 
-}
+    }
 
-/**
- * @brief [brief description]
- * @details Assumes Idle thread never sleeps
- */
 void TCB_RemoveRunningAndSleep(void) {
      long status;
      status = StartCritical();
      if(ThreadList.count > 1){
-      // (RunningThread->prev)->next = RunningThread->next;
-      // (RunningThread->next)->prev = RunningThread->prev;
+      (RunningThread->prev)->next = RunningThread->next;
+      (RunningThread->next)->prev = RunningThread->prev;
       ThreadList.count--;
     }else if(ThreadList.count == 1){
       idleThread->next = idleThread;

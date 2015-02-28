@@ -12,6 +12,12 @@
 #include "Mailbox.hpp"
 #define STACKSIZE 100
 #define SYSTICK_EN 1  
+
+//------------------------------------
+//------------------------------------
+#define HACK 1
+//------------------------------------
+//------------------------------------
 #include "FIFO.hpp"
 #ifdef __cplusplus
 extern "C" {
@@ -38,8 +44,11 @@ int32_t ThreadCount = 0;
 // Tcb_t* idleThread = &idleThreadMem;
 
 
-inline void Context_Switch(void){
-    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+inline void Schedule_and_Context_Switch(void){
+  long status = StartCritical();
+  TCB_Scheduler();
+  EndCritical(status);
+  NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
  /********* OS_Init ************
  * initialize operating system, disable interrupts until OS_Launch
@@ -157,7 +166,12 @@ int OS_AddThread(void(*task)(void),
   Tcb_t* thread = TCB_GetNewThread();
   TCB_SetInitialStack(thread);  //Set thumb bit and dummy regs
   thread->stack[STACKSIZE-2] = (int32_t) (task); //return to task
+
+#ifdef HACK
+  thread->priority = 1;
+#else
   thread->priority = priority;
+#endif
   TCB_InsertNodeBeforeRoot(thread);
 
   ThreadCount++;
@@ -235,11 +249,14 @@ int OS_AddPeriodicThread(void(*task)(void),
 // OS_Sleep(0) implements cooperative multitasking
 void OS_Sleep(unsigned long sleepTime) {
     long status = StartCritical();
+
     Tcb_t * runningThread = TCB_GetRunningThread();
     runningThread-> state_sleep = sleepTime;
+    
     TCB_RemoveRunningAndSleep();
-	  EndCritical(status);
-    Context_Switch();
+	  
+    EndCritical(status);
+    Schedule_and_Context_Switch();
 //    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
  
 }
@@ -259,7 +276,7 @@ void OS_Kill(void) {
 	
 	
     EndCritical(status); 
-    Context_Switch();
+    Schedule_and_Context_Switch();
 
     // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 
@@ -276,15 +293,18 @@ void OS_Kill(void) {
 void OS_Suspend(void)
 {
 		
-    //	long status = StartCritical();
-//    Tcb_t * runningThread = TCB_GetRunningThread();
-//    runningThread-> state_sleep = 0;
-//    TCB_RemoveRunningAndSleep();
-    //If running list empty then insert idle task
-//	  EndCritical(status);
-  //This is where we would do any scheduling
-	
-    Context_Switch();
+//    long status = StartCritical();
+// //    Tcb_t * runningThread = TCB_GetRunningThread();
+// //    runningThread-> state_sleep = 0;
+// //    TCB_RemoveRunningAndSleep();
+//     //If running list empty then insert idle task
+// //	  
+//   //This is where we would do any scheduling
+// 	TCB_PushBackRunning();  
+//   Schedule_and_Context_Switch();
+
+// 	EndCritical(status);
+  OS_Sleep(0);
   // NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
 
@@ -382,13 +402,15 @@ void Timer1A_Handler(void) {
 void SysTick_Handler(void){
     long status;
     status = StartCritical();
-    //DisableInterrupts();
+
     TCB_UpdateSleeping();
-    //EnableInterrupts();
-    EndCritical(status);
-    //Context_Switch();
-    NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    TCB_PushBackRunning();
+    Schedule_and_Context_Switch();
+    
+
+    //NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
     systemTime3++;
+    EndCritical(status);
 }
 
 

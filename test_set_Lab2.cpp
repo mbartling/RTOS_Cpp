@@ -9,7 +9,7 @@
 #include "interpreter.h"
 #include "Perf.h"
 
-//#define TESTMAIN 4
+// #define TESTMAIN 4
 //#define Task1
 //#define Task1_5 // to be able to run this task properly, make sure to comment out the taks run in Timer2A_Handler
 //#define Task2
@@ -249,9 +249,9 @@ unsigned long data,voltage;
 
 //--------------end of Task 3-----------------------------
 
-short PID_stm32(short Error, short *Coeff) {
-    return 0;
-}
+//short PID_stm32(short Error, short *Coeff) {
+//    return 0;
+//}
 //------------------Task 4--------------------------------
 // foreground thread that runs without waiting or sleeping
 // it executes a digital controller 
@@ -365,7 +365,7 @@ void Thread1(void){
     PE0 ^= 0x01;       // heartbeat
     Count1++;
     //OS_Suspend();      // cooperative multitasking
-		OS_Sleep(10);
+		OS_Sleep(0);
   }
 }
 void Thread2(void){
@@ -374,7 +374,7 @@ void Thread2(void){
     PE1 ^= 0x02;       // heartbeat
     Count2++;
     //OS_Suspend();      // cooperative multitasking
-		OS_Sleep(20);
+		OS_Sleep(0);
   }
 }
 void Thread3(void){
@@ -383,7 +383,7 @@ void Thread3(void){
     PE2 ^= 0x04;       // heartbeat
     Count3++;
     //OS_Suspend();      // cooperative multitasking
-		OS_Sleep(40);
+		OS_Sleep(0);
   }
 }
 

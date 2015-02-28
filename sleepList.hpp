@@ -67,17 +67,23 @@ public:
     insertAfter(p, head()->prev);
   }
 
-  void pop_back(void){
+  T pop_back(void){
     if(isEmpty()){
       //Do something
+      return NULL;
     }
+    T t = tail()->data;
     remove(tail());
+    return t;
   }
-  void pop_front(void){
+  T pop_front(void){
     if(isEmpty()){
       //Do something
+      return NULL;
     }
+    T t = head()->data;
     remove(head());
+    return t;
   }
 
   // T& Get(Cell* p){
