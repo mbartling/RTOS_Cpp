@@ -9,7 +9,7 @@
 #include "interpreter.h"
 #include "Perf.h"
 
-// #define TESTMAIN 4
+#define TESTMAIN 2
 //#define Task1
 //#define Task1_5 // to be able to run this task properly, make sure to comment out the taks run in Timer2A_Handler
 //#define Task2
@@ -17,7 +17,7 @@
 //#define Task4
 //#define Task5
 //#define Task6 //testing the fft filter
-#define mainTaskLab2
+//#define mainTaskLab2
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 #ifdef __cplusplus
 extern "C" {

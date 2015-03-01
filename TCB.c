@@ -13,8 +13,36 @@ Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
 Tcb_t* RunningThread = NULL;
 Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
-// Tcb_t DummyThread;
 
+#define AGE_PRIORITY_0 0
+#define AGE_PRIORITY_1 1
+#define AGE_PRIORITY_2 2
+#define AGE_PRIORITY_3 3
+#define AGE_PRIORITY_4 4
+#define AGE_PRIORITY_5 5
+#define AGE_PRIORITY_6 6
+#define AGE_PRIORITY_7 7
+
+const int AGE_FROM[] = {
+  AGE_PRIORITY_0,
+  AGE_PRIORITY_1,
+  AGE_PRIORITY_2,
+  AGE_PRIORITY_3,
+  AGE_PRIORITY_4,
+  AGE_PRIORITY_5,
+  AGE_PRIORITY_6,
+  AGE_PRIORITY_7
+};
+int Current_AGE[] = {
+  AGE_PRIORITY_0,
+  AGE_PRIORITY_1,
+  AGE_PRIORITY_2,
+  AGE_PRIORITY_3,
+  AGE_PRIORITY_4,
+  AGE_PRIORITY_5,
+  AGE_PRIORITY_6,
+  AGE_PRIORITY_7
+};
 
 List<Tcb_t*, MAXNUMTHREADS> PriorityList[NUM_PRIORITIES];
 
@@ -42,6 +70,20 @@ void Idle(void){
   }
 }
 
+/**
+ * @brief Modulate priorities based on age
+ * @details If sufficiently old then temporarily promote priority
+ */
+void TCB_PromotePriority(void){
+  for(int i = 1; i < NUM_PRIORITIES; ++i){
+    if(!PriorityList[i].isEmpty()){
+      if(--Current_AGE[i] <= 0){
+        PriorityList[i-1].push_back(PriorityList[i].pop_front());
+        Current_AGE[i] = AGE_FROM[i];
+      }
+    }
+  }
+}
 void (*idleTask)(void);
 /**
  * @brief Configure the idle thread

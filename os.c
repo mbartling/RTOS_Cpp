@@ -15,7 +15,7 @@
 
 //------------------------------------
 //------------------------------------
-#define HACK 1
+//#define HACK 1
 //------------------------------------
 //------------------------------------
 #include "FIFO.hpp"
@@ -402,9 +402,10 @@ void Timer1A_Handler(void) {
 void SysTick_Handler(void){
     long status;
     status = StartCritical();
-
+    TCB_PromotePriority();
     TCB_UpdateSleeping();
     TCB_PushBackRunning();
+
     Schedule_and_Context_Switch();
     
 

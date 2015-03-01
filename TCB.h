@@ -57,5 +57,6 @@ void TCB_Configure_IdleThread(void);
 void TCB_CheckSleeping(void) ;
 void TCB_PushBackRunning(void);
 void TCB_Scheduler(void);
+void TCB_PromotePriority(void);
 //void dummy(void); // Tests if function pointer set properly
 #endif /*__TCB_H__*/
