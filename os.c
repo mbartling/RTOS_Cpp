@@ -10,9 +10,10 @@
 #include "Timer.h"
 #include "priority.h"
 #include "Mailbox.hpp"
+#include "sleepList.hpp"
 #define STACKSIZE 100
 #define SYSTICK_EN 1  
-
+#define MaxNumberOfPeriodicThreads 10
 //------------------------------------
 //------------------------------------
 //#define HACK 1
@@ -40,9 +41,22 @@ unsigned long systemTime2= 0;
 volatile unsigned long systemTime3= 0;
 volatile unsigned long systemPeriod = 0;
 int32_t ThreadCount = 0;
+int numberOfPeriodicCounters = 0;
+int minCounter = 0;  // keep track of the smallest number to set the next period for 1_shot timer
+unsigned long lastPeriod;
+unsigned long thisPeriod;
+typedef struct _periodicThread{
+  int priority;
+  int period;
+  int counter;
+  void(*task)() ;
+} periodicThread;
+
+periodicThread periodicThreadList[MaxNumberOfPeriodicThreads];  
+//void (*f)(void), MAXNUMTHREADS> periodicTaskList[NUM_PRIORITIES];
+
 // Tcb_t idleThreadMem;
 // Tcb_t* idleThread = &idleThreadMem;
-
 
 inline void Schedule_and_Context_Switch(void){
   long status = StartCritical();
@@ -50,14 +64,15 @@ inline void Schedule_and_Context_Switch(void){
   EndCritical(status);
   NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
- /********* OS_Init ************
+/********* OS_Init ************
  * initialize operating system, disable interrupts until OS_Launch
  * initialize OS controlled I/O: serial, ADC, systick, LaunchPad I/O and timers 
  * @param  input:  none
  * @return output: none
  */
 int Timer1APeriod = TIME_1MS/1000; // .1us 
-
+typedef void (*func)();
+List<func, MAXNUMTHREADS> periodicTaskList[NUM_PRIORITIES];
 void OS_Init(void)
 {
   DisableInterrupts();
@@ -235,8 +250,26 @@ unsigned long GlobalPeriodicThreadPriority;
 int OS_AddPeriodicThread(void(*task)(void), 
         unsigned long period, unsigned long priority){
     long status = StartCritical();
-    GlobalPeriodicThread = task;
-    Timer2A_Init((uint32_t)period);
+    //checking for errors 
+    if (numberOfPeriodicCounters >= MaxNumberOfPeriodicThreads) {
+      printf("too many Periodic Threads\n");
+      return 0;
+    }
+    
+    //instantiate the periodic thread to be added to the periodicThreadList 
+    periodicThread *newPeriodicThread =  &periodicThreadList[numberOfPeriodicCounters];
+    newPeriodicThread->priority = priority;
+    newPeriodicThread->period = period;
+    newPeriodicThread->counter = period;
+    newPeriodicThread->task = task;
+    //add to the list
+    // if there is no element in the list, then set up the one shot timer 
+    if (numberOfPeriodicCounters == 0) {
+      Timer2A_Init((uint32_t)period);
+      minCounter = period; 
+      thisPeriod = period; 
+    }
+    numberOfPeriodicCounters++;
     EndCritical(status);
     return 1;
 }
@@ -359,61 +392,6 @@ int OS_AddSW2Task(void(*task)(void), unsigned long priority) {
     SW2GlobalTaskPriority = priority; 
     return 0;
 }
-/**
- * @brief this function takes care of the GPIOPortF_Handler. 
- * specific implementation for Lab2: calls that function that is was request once the osADDSW1Task was called
- */
-void GPIOPortF_Handler(void) {
-    if (GPIO_PORTF_RIS_R&0x10) {
-      GPIO_PORTF_ICR_R = 0x10; //acknowlegement
-      SW1GlobalTask();
-    }else if (GPIO_PORTF_RIS_R&0x1){
-      GPIO_PORTF_ICR_R = 0x1; //acknowlegement
-      SW2GlobalTask();
-    }
-}
-
-
-/**
- * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
- */
-//void Timer0A_Handler(void) {
-//    systemTime2++;
-//    TIMER0_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
-//    GlobalPeriodicThread();
-//}
-
-/**
- * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
- */
-void Timer2A_Handler(void) {
-    systemTime2++;
-    TIMER2_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
-    GlobalPeriodicThread();
-}
-/**
- * @brief used for measuring the time (this timer is used in OS_Time();
- */
-void Timer1A_Handler(void) {
-   TIMER1_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
-   systemTime++; 
-}
-
-void SysTick_Handler(void){
-    long status;
-    status = StartCritical();
-    TCB_PromotePriority();
-    TCB_UpdateSleeping();
-    TCB_PushBackRunning();
-
-    Schedule_and_Context_Switch();
-    
-
-    //NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
-    systemTime3++;
-    EndCritical(status);
-}
-
 
 unsigned long OS_Time() {
     return systemTime3*(systemPeriod) + systemPeriod - NVIC_ST_CURRENT_R;
@@ -541,5 +519,90 @@ void OS_setupTest(void)
 }
 
 
+/**********************************************Handler***************************/
+/**
+ * @brief this function takes care of the GPIOPortF_Handler. 
+ * specific implementation for Lab2: calls that function that is was request once the osADDSW1Task was called
+ */
+void GPIOPortF_Handler(void) {
+    if (GPIO_PORTF_RIS_R&0x10) {
+      GPIO_PORTF_ICR_R = 0x10; //acknowlegement
+      SW1GlobalTask();
+    }else if (GPIO_PORTF_RIS_R&0x1){
+      GPIO_PORTF_ICR_R = 0x1; //acknowlegement
+      SW2GlobalTask();
+    }
+}
+
+
+/**
+ * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
+ */
+//void Timer0A_Handler(void) {
+//    systemTime2++;
+//    TIMER0_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
+//    GlobalPeriodicThread();
+//}
+
+/**
+ * @brief runs a task periodically (based on what the TA said, they don't want us to add a thread
+ */
+
+
+void Timer2A_Handler(void) {
+   //long status;
+   //status = StartCritical();
+   lastPeriod = thisPeriod;
+   
+   //update counters  
+   for (int i = 0; i < numberOfPeriodicCounters; i++) {
+     periodicThreadList[i].counter -= lastPeriod;
+     //if counter zero, add to the tasklist and reset counter 
+     if (periodicThreadList[i].counter <= 0) {
+       periodicTaskList[periodicThreadList[i].priority].push_back(periodicThreadList[i].task);
+        periodicThreadList[i].counter = periodicThreadList[i].period; //reset the counter if zero
+     }
+    
+     //update minCounter 
+     if (periodicThreadList[i].counter < minCounter) {
+       minCounter = periodicThreadList[i].counter;
+     }
+   }
+    
+   //calling all the functions 
+   for(int i = 0; i < NUM_PRIORITIES; ++i){
+     while(!periodicTaskList[i].isEmpty()){
+      GlobalPeriodicThread = periodicTaskList[i].pop_front();
+      GlobalPeriodicThread();
+    }
+   } 
+   thisPeriod = minCounter;
+   TIMER2_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
+
+   Timer2A_Init((uint32_t)minCounter);
+   //EndCritical(status);
+}
+/**
+ * @brief used for measuring the time (this timer is used in OS_Time();
+ */
+void Timer1A_Handler(void) {
+   TIMER1_ICR_R = TIMER_ICR_TATOCINT ;   //clearing the interrupt 
+   systemTime++; 
+}
+
+void SysTick_Handler(void){
+    long status;
+    status = StartCritical();
+    TCB_PromotePriority();
+    TCB_UpdateSleeping();
+    TCB_PushBackRunning();
+
+    Schedule_and_Context_Switch();
+    
+
+    //NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
+    systemTime3++;
+    EndCritical(status);
+}
 
 

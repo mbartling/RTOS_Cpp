@@ -73,7 +73,8 @@ void Timer2A_Init(uint32_t period){
   SYSCTL_RCGCTIMER_R |= 0x04;      // activate timer0
   TIMER2_CTL_R &= ~TIMER_CTL_TAEN; // disable timer0A during setup
   TIMER2_CFG_R = 0x00000000;       //32 bit timer configuration
-  TIMER2_TAMR_R = (TIMER_TAMR_TAMR_PERIOD); //condfgure the timer as a periodic timer
+   
+  TIMER2_TAMR_R = TIMER_TAMR_TAMR_1_SHOT; //condfgure the timer as a one shot timer
   TIMER2_TAILR_R = period - 1;       // timer start value (when ever timer gets to zero, it reloads this value)
   //TIMER0_TAMATCHR_R = period-high-1; // duty cycle = high/period
   TIMER2_CTL_R |= TIMER_CTL_TAEN;  // enable timer0A 16-b (this step is needed to enable the timer (do right before wanting the timer 
