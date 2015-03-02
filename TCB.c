@@ -132,6 +132,13 @@ void TCB_PushBackRunning(void){
     PriorityList[RunningThread->priority].push_back(RunningThread); 
   }
 }
+void TCB_PushBackThread(Tcb_t* thread){
+    //push the running thread to end of its list if necessary
+  if(thread != idleThread){
+    //TODO push to sleeping list if necessary
+    PriorityList[thread->priority].push_back(thread); 
+  }
+}
 /**
  * @brief The scheduler just picks the next thread to run
  * @details nothing more, nothing less

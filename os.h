@@ -9,7 +9,8 @@
  
 #ifndef __OS_H
 #define __OS_H  1
-
+#include "sleepList.hpp"
+#include "TCB.h"
  //edit these depending on your clock        
 #define TIME_1MS    80000          
 #define TIME_2MS    (2*TIME_1MS)  
@@ -20,6 +21,7 @@
 struct  Sema4{
   long Value;    //<! >0 means free, otherwise means busy        
  //add other components here, if necessary to implement blocking
+  List<Tcb_t*, MAXNUMTHREADS> waitList;
 };
 typedef struct Sema4 Sema4Type;
 

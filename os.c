@@ -97,16 +97,25 @@ void OS_Init(void)
 // output: none
 // the following defintion is suitable for coopeartive semaphores
 void OS_Wait(Sema4Type *semaPt) {
-    DisableInterrupts();
-    //while(__ldrex(&(semaPt->Value)) <= 0){
-		while(semaPt->Value <= 0){
-        EnableInterrupts();
-        OS_Suspend();
-        DisableInterrupts();
-    }
-    (semaPt->Value) = (semaPt->Value) - 1;
-		//while(!__strex(__ldrex(&(semaPt->Value)) - 1, &(semaPt->Value))){}
-    EnableInterrupts();
+  long status = StartCritical();
+  (semaPt->Value) = (semaPt->Value) - 1;
+  if(semaPt->Value <= 0){
+    Tcb_t * runningThread = TCB_GetRunningThread();
+    semaPt->waitList.push_back(runningThread);
+    EndCritical(status);
+    Schedule_and_Context_Switch();
+  }
+  EndCritical(status);
+  //   DisableInterrupts();
+  //   //while(__ldrex(&(semaPt->Value)) <= 0){
+		// while(semaPt->Value <= 0){
+  //       EnableInterrupts();
+  //       OS_Suspend();
+  //       DisableInterrupts();
+  //   }
+  //   (semaPt->Value) = (semaPt->Value) - 1;
+		// //while(!__strex(__ldrex(&(semaPt->Value)) - 1, &(semaPt->Value))){}
+  //   EnableInterrupts();
 }
 
 // ******** OS_Signal ************
@@ -116,9 +125,14 @@ void OS_Wait(Sema4Type *semaPt) {
 // input:  pointer to a counting semaphore
 // output: none
 void OS_Signal(Sema4Type *semaPt) {
-    long status;
-    status = StartCritical();
+    long status = StartCritical();
     (semaPt->Value) = (semaPt->Value) + 1;
+    if(semaPt->Value <= 0){
+      TCB_PushBackThread(semaPt->waitList.pop_front());
+      TCB_PushBackRunning();
+      EndCritical(status);
+      Schedule_and_Context_Switch();
+    }
     EndCritical(status);
 }
 
