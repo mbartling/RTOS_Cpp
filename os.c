@@ -52,6 +52,8 @@ typedef struct _periodicThread{
   void(*task)() ;
 } periodicThread;
 
+Sema4Type* semaList[50];
+int semaLoc = 0;
 periodicThread periodicThreadList[MaxNumberOfPeriodicThreads];  
 //void (*f)(void), MAXNUMTHREADS> periodicTaskList[NUM_PRIORITIES];
 
@@ -129,9 +131,9 @@ void OS_Signal(Sema4Type *semaPt) {
     (semaPt->Value) = (semaPt->Value) + 1;
     if(semaPt->Value <= 0){
       TCB_PushBackThread(semaPt->waitList.pop_front());
-      TCB_PushBackRunning();
+//      TCB_PushBackRunning();
       EndCritical(status);
-      Schedule_and_Context_Switch();
+//      Schedule_and_Context_Switch();
     }
     EndCritical(status);
 }
@@ -166,6 +168,13 @@ void OS_bSignal(Sema4Type *semaPt) {
 // output: none
 void OS_InitSemaphore(Sema4Type *semaPt, long value) {
     semaPt->Value = value;
+		if(semaLoc < 50){
+			for(int i = 0; i < semaLoc;  i++){
+				
+				if(semaPt == semaList[i]){ return; } 
+			}
+			semaList[semaLoc++] = semaPt; // For debugging
+		}
 }
 
 //******** OS_AddThread *************** 

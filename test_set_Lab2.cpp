@@ -9,7 +9,7 @@
 #include "interpreter.h"
 #include "Perf.h"
 
-#define TESTMAIN 2
+//#define TESTMAIN 4
 //#define Task1
 //#define Task1_5 // to be able to run this task properly, make sure to comment out the taks run in Timer2A_Handler
 //#define Task2
@@ -17,7 +17,7 @@
 //#define Task4
 //#define Task5
 //#define Task6 //testing the fft filter
-//#define mainTaskLab2
+#define mainTaskLab2
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +56,8 @@ unsigned long JitterHistogram[JITTERSIZE]={0,};
 #define PE2  (*((volatile unsigned long *)0x40024010))
 #define PE3  (*((volatile unsigned long *)0x40024020))
 void PortE_Init(void){ unsigned long volatile delay;
-  SYSCTL_RCGC2_R |= 0x10;       // activate port E
+  //SYSCTL_RCGC2_R |= 0x10;       // activate port E
+	SYSCTL_RCGCGPIO_R |= 0x10;       
   delay = SYSCTL_RCGC2_R;        
   delay = SYSCTL_RCGC2_R;         
   GPIO_PORTE_DIR_R |= 0x0F;    // make PE3-0 output heartbeats
@@ -161,6 +162,13 @@ void SW1Push(void){
     OS_ClearMsTime();  // at least 20ms between touches
   }
 }
+void print_hist(void){
+	printf("Jitter Histogram\n");
+	for(int i = 0; i < 64; i++){
+		printf("%ld\t", JitterHistogram[i]);
+	}
+	OS_Kill();
+}
 //************SW2Push*************
 
  //Called when SW2 Button pushed, Lab 3 only
@@ -169,7 +177,7 @@ void SW1Push(void){
 void SW2Push(void){
    fputc('c', stdout); 
     if(OS_MsTime() > 20){ // debounce
-    if(OS_AddThread(&ButtonWork,100,4)){
+    if(OS_AddThread(&print_hist,100,5)){
       NumCreated++; 
     }
     OS_ClearMsTime();  // at least 20ms between touches
@@ -241,7 +249,7 @@ unsigned long data,voltage;
     data = OS_MailBox_Recv();
     voltage = 3000*data/4095;               // calibrate your device so voltage is in mV
     PE3 = 0x08;
-    //ST7735_Message(0,2,"v(mV) =",voltage);  
+    ST7735_Message(0,2,"v(mV) =",voltage);  
     PE3 = 0x00;
   } 
   OS_Kill();  // done
@@ -322,7 +330,7 @@ int main(void){
 
 //*******attach background tasks***********
   OS_AddSW1Task(&SW1Push,2);
-//  OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
+  OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
   ADC_Open(4);  // sequencer 3, channel 4, PD3, sampling in DAS()
   OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
 
@@ -535,7 +543,8 @@ static int i=0;
   if(i==50){
     i = 0;         //every 50 ms
     Count1++;
-    OS_bSignal(&Readyd);
+    //OS_bSignal(&Readyd);
+		OS_Signal(&Readyd);
   }
 }
 void Thread2d(void){
@@ -543,7 +552,8 @@ void Thread2d(void){
   Count1 = 0;          
   Count2 = 0;          
   for(;;){
-    OS_bWait(&Readyd);
+    //OS_bWait(&Readyd);
+		OS_Wait(&Readyd);
     Count2++;     
   }
 }

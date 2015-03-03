@@ -707,9 +707,9 @@ void static commonInit(const uint8_t *cmdList) {
   SSI0_CR1_R &= ~SSI_CR1_SSE;           // disable SSI
   SSI0_CR1_R &= ~SSI_CR1_MS;            // master mode
                                         // configure for system clock/PLL baud clock source
-  SSI0_CC_R = (SSI0_CC_R&~SSI_CC_CS_M)+SSI_CC_CS_SYSPLL;
+  //SSI0_CC_R = (SSI0_CC_R&~SSI_CC_CS_M)+SSI_CC_CS_SYSPLL;
 //                                        // clock divider for 3.125 MHz SSIClk (50 MHz PIOSC/16)
-//  SSI0_CPSR_R = (SSI0_CPSR_R&~SSI_CPSR_CPSDVSR_M)+16;
+  SSI0_CPSR_R = (SSI0_CPSR_R&~SSI_CPSR_CPSDVSR_M)+16;
                                         // clock divider for 8 MHz SSIClk (80 MHz PLL/24)
                                         // SysClk/(CPSDVSR*(1+SCR))
                                         // 80/(10*(1+0)) = 8 MHz (slower than 4 MHz)
@@ -1599,7 +1599,7 @@ void ST7735_LCD_Init() {
 void ST7735_Message(IN int device, IN int line, IN char* string, IN long value)
 {
   char str_buff[32];
-  OS_bWait(&LCDFree); 
+  OS_Wait(&LCDFree); 
   if(line < 0 || line > 3){
     DEBUG_ST7735_PRINTF("Invalid Line, returning%c", '\n');
     return;
@@ -1626,6 +1626,6 @@ void ST7735_Message(IN int device, IN int line, IN char* string, IN long value)
 	//79 = 160/2 - 1 = _height/2 - 1
   ST7735_DrawFastHLine(0, 79, _width, color);
 
-  OS_bSignal(&LCDFree); 
+  OS_Signal(&LCDFree); 
   return;
 }
