@@ -99,7 +99,7 @@ void OS_Init(void)
 void OS_Wait(Sema4Type *semaPt) {
   long status = StartCritical();
   (semaPt->Value) = (semaPt->Value) - 1;
-  if(semaPt->Value <= 0){
+  if(semaPt->Value < 0){
     Tcb_t * runningThread = TCB_GetRunningThread();
     semaPt->waitList.push_back(runningThread);
     EndCritical(status);
