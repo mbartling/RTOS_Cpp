@@ -74,7 +74,7 @@ void Idle(void){
 
 /**
  * @brief Modulate priorities based on age
- * @details If sufficiently old then temporarily promote priority
+ * @details If sufficiently old then temporarily promotennnkk priority
  */
 void TCB_PromotePriority(void){
   for(int i = 1; i < NUM_PRIORITIES; ++i){
@@ -147,7 +147,7 @@ void TCB_PushBackThread(Tcb_t* thread){
  */
 void TCB_Scheduler(void){
   // Pick Running Thread Next
-  if(RunningThread->next == RunningThread) {
+//  if(RunningThread->next == RunningThread) {
       for(int i = 0;  i < IDLE_THREAD_PRIORITY; ++i){
 //          if((!PriorityList[i].isEmpty()) && (ThreadList.count!=0)){
           if((!PriorityList[i].isEmpty())) {
@@ -155,7 +155,7 @@ void TCB_Scheduler(void){
               break;    
           }
       }
-  } 
+//  } 
   //Post Process such as pushing something to sleeping list
   //
   return;

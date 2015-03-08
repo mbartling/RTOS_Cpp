@@ -105,7 +105,7 @@ void OS_Wait(Sema4Type *semaPt) {
   (semaPt->Value) = (semaPt->Value) - 1;
   if(semaPt->Value < 0){
     Tcb_t * runningThread = TCB_GetRunningThread();
-    semaPt->waitList.push_back(runningThread);
+    (semaPt->waitList).push_back(runningThread);
     EndCritical(status);
     Schedule_and_Context_Switch();
   }
@@ -618,6 +618,7 @@ void Timer1A_Handler(void) {
 void SysTick_Handler(void){
     long status;
     status = StartCritical();
+    TCB_PromotePriority();
     TCB_UpdateSleeping();
     TCB_PushBackRunning();
     Schedule_and_Context_Switch();
