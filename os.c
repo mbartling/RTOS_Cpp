@@ -62,7 +62,9 @@ periodicThread periodicThreadList[MaxNumberOfPeriodicThreads];
 
 inline void Schedule_and_Context_Switch(void){
   long status = StartCritical();
-  TCB_Scheduler();
+ // if(RunningThread->next == RunningThread) {
+      TCB_Scheduler();
+  //} 
   EndCritical(status);
   NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
@@ -324,7 +326,7 @@ void OS_Sleep(unsigned long sleepTime) {
 void OS_Kill(void) {
     long status = StartCritical();
     TCB_RemoveRunningThread();
-		ThreadCount--;
+    ThreadCount--;
     //if TCB_ThreadList is not empty after removing the current thread, context switch
     // if(TCB_threadListEmpty != 0) {
         // OS_Suspend(); 
@@ -616,13 +618,9 @@ void Timer1A_Handler(void) {
 void SysTick_Handler(void){
     long status;
     status = StartCritical();
-    TCB_PromotePriority();
     TCB_UpdateSleeping();
     TCB_PushBackRunning();
-
     Schedule_and_Context_Switch();
-    
-
     //NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
     systemTime3++;
     EndCritical(status);

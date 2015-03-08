@@ -7,6 +7,7 @@
 #define DEBUGprintf(...) /**/
 
 #define NUM_PRIORITIES 7
+#define IDLE_THREAD_PRIORITY ((NUM_PRIORITIES)+ 1)
 
 List<Tcb_t*, MAXNUMTHREADS> SleepingList;
 Pool<Tcb_t, MAXNUMTHREADS> ThreadPool;
@@ -14,6 +15,7 @@ Tcb_t* RunningThread = NULL;
 Tcb_t* SleepingThread = NULL; // Sleeping thread root
 TcbListC_t ThreadList;
 
+int totalThreadCount;
 #define AGE_PRIORITY_0 0
 #define AGE_PRIORITY_1 1
 #define AGE_PRIORITY_2 2
@@ -44,7 +46,7 @@ int Current_AGE[] = {
   AGE_PRIORITY_7
 };
 
-List<Tcb_t*, MAXNUMTHREADS> PriorityList[NUM_PRIORITIES];
+List<Tcb_t*, MAXNUMTHREADS> PriorityList[IDLE_THREAD_PRIORITY];
 
 
 #ifdef __cplusplus
@@ -97,9 +99,9 @@ void (*idleTask)(void);
   idleThread = TCB_GetNewThread();
   TCB_SetInitialStack(idleThread);
   idleThread->stack[STACKSIZE-2] = (int32_t) (Idle); //return to IDLE
-  ThreadList.head = idleThread;
+  //ThreadList.head = idleThread;
+  idleThread->priority = IDLE_THREAD_PRIORITY - 1; 
   RunningThread = idleThread;
-
 }
 
 void TCB_SetInitialStack(Tcb_t* pTcb)
@@ -127,32 +129,35 @@ void TCB_SetInitialStack(Tcb_t* pTcb)
 
 void TCB_PushBackRunning(void){
     //push the running thread to end of its list if necessary
-  if(RunningThread != idleThread){
+//  if(RunningThread != idleThread){
     //TODO push to sleeping list if necessary
     PriorityList[RunningThread->priority].push_back(RunningThread); 
-  }
+ // }
 }
 void TCB_PushBackThread(Tcb_t* thread){
     //push the running thread to end of its list if necessary
-  if(thread != idleThread){
+  //if(thread != idleThread){
     //TODO push to sleeping list if necessary
     PriorityList[thread->priority].push_back(thread); 
-  }
+  //}
 }
 /**
  * @brief The scheduler just picks the next thread to run
  * @details nothing more, nothing less
  */
 void TCB_Scheduler(void){
-
   // Pick Running Thread Next
-  for(int i = 0;  i < NUM_PRIORITIES; ++i){
-    if(!PriorityList[i].isEmpty()){
-      RunningThread->next = PriorityList[i].pop_front();
-      break;    
-    }
-  }
+  if(RunningThread->next == RunningThread) {
+      for(int i = 0;  i < IDLE_THREAD_PRIORITY; ++i){
+//          if((!PriorityList[i].isEmpty()) && (ThreadList.count!=0)){
+          if((!PriorityList[i].isEmpty())) {
+              RunningThread->next = PriorityList[i].pop_front();
+              break;    
+          }
+      }
+  } 
   //Post Process such as pushing something to sleeping list
+  //
   return;
 }
 
@@ -187,8 +192,7 @@ void TCB_InsertNodeBeforeRoot(Tcb_t* node)
   //   RunningThread->prev = node;
   // }
   PriorityList[node->priority].push_back(node); 
-
-  ThreadList.count++;
+  totalThreadCount++;
   EndCritical(status);
 
 }
@@ -203,30 +207,31 @@ void TCB_RemoveThreadAndSleep(Tcb_t* thread) {
 void TCB_RemoveRunningThread(void) {
   long status;
   status = StartCritical();
+  //make sure this is safe (the assumption is that OS_Kill would never be called in a situation where we only have the idleThread inside the priority) 
   //Tcb_t* thread = RunningThread;
-  if(ThreadList.count == 0){
-   EndCritical(status);
+//  if(totalcount == 0){
+//   EndCritical(status);
+//
+//   return; // Never remove idle thread
+//  }
 
-   return; // Never remove idle thread
-  }
-
-  if(ThreadList.count > 1){
-  // (RunningThread->prev)->next = RunningThread->next;  //Update thread list
-  // (RunningThread->next)->prev = RunningThread->prev;  //Update thread list
-
-    ThreadList.count--;
-  }else if(ThreadList.count == 1){
-  
-  idleThread->next = idleThread;
-  idleThread->prev = idleThread;
-  RunningThread->next = idleThread; //Make Sure to never call sleep on idle thread
-  ThreadList.head = idleThread;     //Make Sure to never call sleep on idle thread 
-
-  ThreadList.count--;
-      } 
+//  if(ThreadList.count > 1){
+//  // (RunningThread->prev)->next = RunningThread->next;  //Update thread list
+//  // (RunningThread->next)->prev = RunningThread->prev;  //Update thread list
+//
+//    ThreadList.count--;
+//  }else if(ThreadList.count == 1){
+//  
+//  idleThread->next = idleThread;
+//  idleThread->prev = idleThread;
+//  RunningThread->next = idleThread; //Make Sure to never call sleep on idle thread
+//  ThreadList.head = idleThread;     //Make Sure to never call sleep on idle thread 
+//
+//  ThreadList.count--;
+//  } 
+  totalThreadCount--; 
   ThreadPool.free(RunningThread); // Free the thread in memory
   EndCritical(status);
-
 }
 
 /**
@@ -236,18 +241,20 @@ void TCB_RemoveRunningThread(void) {
 void TCB_RemoveRunningAndSleep(void) {
      long status;
      status = StartCritical();
-     if(ThreadList.count > 1){
-      // (RunningThread->prev)->next = RunningThread->next;
-      // (RunningThread->next)->prev = RunningThread->prev;
-      ThreadList.count--;
-    }else if(ThreadList.count == 1){
-      idleThread->next = idleThread;
-      idleThread->prev = idleThread;
-      RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
-      ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
-      ThreadList.count--;
-    } 
-      DEBUGprintf("Sleeping\n");
+//     if(ThreadList.count > 1){
+//      // (RunningThread->prev)->next = RunningThread->next;
+//      // (RunningThread->next)->prev = RunningThread->prev;
+//      ThreadList.count--;
+//    }else if(ThreadList.count == 1){
+//      idleThread->next = idleThread;
+//      idleThread->prev = idleThread;
+//      RunningThread->next = idleThread;   //Make Sure to never call sleep on idle thread
+//      ThreadList.head = idleThread; //Make Sure to never call sleep on idle thread 
+//      ThreadList.count--;
+//    } 
+//     totalThreadCount--;   
+     DEBUGprintf("Sleeping\n");
+
       SleepingList.push_back(RunningThread);
       EndCritical(status);
 }
@@ -255,10 +262,10 @@ void TCB_RemoveRunningAndSleep(void) {
 Tcb_t* TCB_GetRunningThread(void){
       return RunningThread;
 }
-
-int TCB_threadListEmpty(void){
-      return (ThreadList.count == 0);
-}
+//
+//int TCB_threadListEmpty(void){
+//      return (ThreadList.count == 0);
+//}
 
 void TCB_RemoveSleepingNode(Tcb_t* thread){
       EX_method_not_implemented.fail();
