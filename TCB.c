@@ -101,7 +101,8 @@ void (*idleTask)(void);
   TCB_SetInitialStack(idleThread);
   idleThread->stack[STACKSIZE-2] = (int32_t) (Idle); //return to IDLE
   //ThreadList.head = idleThread;
-  idleThread->priority = IDLE_THREAD_PRIORITY - 1; 
+  idleThread->priority = IDLE_THREAD_PRIORITY - 1;
+	idleThread->next = idleThread;
   RunningThread = idleThread;
 }
 

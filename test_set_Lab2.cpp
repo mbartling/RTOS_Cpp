@@ -16,8 +16,9 @@
 //#define Task3
 //#define Task4
 //#define Task5
-//#define Task6 //testing the fft filter
-#define mainTaskLab2
+// #define Task6 //testing the fft filter
+//#define mainTaskLab2
+#define Testmain5
 //*********Prototype for FFT in cr4_fft_64_stm32.s, STMicroelectronics
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +33,13 @@ void Interpreter() {
     while(1) {
         interpreter();
     }
+}
+void Jitter(void){
+  int i;
+  for(i = 0; i < 64; i++){
+    printf("%d\t", jitter);
+  }
+  
 }
 //unsigned long NumCreated;   // number of foreground threads created
 //unsigned long PIDWork;      // current number of PID calculations finished
@@ -737,202 +745,205 @@ int main(void){   // Testmain4
   PortE_Init();       // profile user threads
   //OS_setupTest() ;
 	OS_Init();
-	OS_AddThread(dummyThread,100,5);
+//	OS_AddThread(dummyThread,100,5);
 	OS_AddThread(Interpreter,100,5);
 	OS_Launch(TIME_2MS);
 
 } 
 #endif
 
-////******************* Lab 3 Preparation 2**********
-//// Modify this so it runs with your RTOS (i.e., fix the time units to match your OS)
-//// run this with 
-//// UART0, 115200 baud rate, used to output results 
-//// SYSTICK interrupts, period established by OS_Launch
-//// first timer interrupts, period established by first call to OS_AddPeriodicThread
-//// second timer interrupts, period established by second call to OS_AddPeriodicThread
-//// SW1 no interrupts
-//// SW2 no interrupts
-//unsigned long CountA;   // number of times Task A called
-//unsigned long CountB;   // number of times Task B called
+//******************* Lab 3 Preparation 2**********
+// Modify this so it runs with your RTOS (i.e., fix the time units to match your OS)
+// run this with 
+// UART0, 115200 baud rate, used to output results 
+// SYSTICK interrupts, period established by OS_Launch
+// first timer interrupts, period established by first call to OS_AddPeriodicThread
+// second timer interrupts, period established by second call to OS_AddPeriodicThread
+// SW1 no interrupts
+// SW2 no interrupts
+unsigned long CountA;   // number of times Task A called
+unsigned long CountB;   // number of times Task B called
 //unsigned long Count1;   // number of times thread1 loops
-//
-//
-////*******PseudoWork*************
-//// simple time delay, simulates user program doing real work
-//// Input: amount of work in 100ns units (free free to change units
-//// Output: none
-//void PseudoWork(unsigned short work){
-//unsigned short startTime;
-//  startTime = OS_Time();    // time in 100ns units
-//  while(OS_TimeDifference(startTime,OS_Time()) <= work){} 
-//}
-//void Thread6(void){  // foreground thread
-//  Count1 = 0;          
-//  for(;;){
-//    Count1++; 
-//    PE0 ^= 0x01;        // debugging toggle bit 0  
-//  }
-//}
-//extern void Jitter(void);   // prints jitter information (write this)
-//void Thread7(void){  // foreground thread
-//  UART_OutString("\n\rEE345M/EE380L, Lab 3 Preparation 2\n\r");
-//  OS_Sleep(5000);   // 10 seconds        
-//  Jitter();         // print jitter information
-//  UART_OutString("\n\r\n\r");
-//  OS_Kill();
-//}
-//#define workA 500       // {5,50,500 us} work in Task A
-//#define counts1us 10    // number of OS_Time counts per 1us
-//void TaskA(void){       // called every {1000, 2990us} in background
-//  PE1 = 0x02;      // debugging profile  
-//  CountA++;
-//  PseudoWork(workA*counts1us); //  do work (100ns time resolution)
-//  PE1 = 0x00;      // debugging profile  
-//}
-//#define workB 250       // 250 us work in Task B
-//void TaskB(void){       // called every pB in background
-//  PE2 = 0x04;      // debugging profile  
-//  CountB++;
-//  PseudoWork(workB*counts1us); //  do work (100ns time resolution)
-//  PE2 = 0x00;      // debugging profile  
-//}
-//
-//int Testmain5(void){       // Testmain5 Lab 3
-//  PortE_Init();
-//  OS_Init();           // initialize, disable interrupts
-//  NumCreated = 0 ;
-//  NumCreated += OS_AddThread(&Thread6,128,2); 
-//  NumCreated += OS_AddThread(&Thread7,128,1); 
-//  OS_AddPeriodicThread(&TaskA,TIME_1MS,0);           // 1 ms, higher priority
-//  OS_AddPeriodicThread(&TaskB,2*TIME_1MS,1);         // 2 ms, lower priority
-// 
-//  OS_Launch(TIME_2MS); // 2ms, doesn't return, interrupts enabled in here
-//  return 0;             // this never executes
-//}
-//
-//
-////******************* Lab 3 Preparation 4**********
-//// Modify this so it runs with your RTOS used to test blocking semaphores
-//// run this with 
-//// UART0, 115200 baud rate,  used to output results 
-//// SYSTICK interrupts, period established by OS_Launch
-//// first timer interrupts, period established by first call to OS_AddPeriodicThread
-//// second timer interrupts, period established by second call to OS_AddPeriodicThread
-//// SW1 no interrupts, 
-//// SW2 no interrupts
-//Sema4Type s;            // test of this counting semaphore
-//unsigned long SignalCount1;   // number of times s is signaled
-//unsigned long SignalCount2;   // number of times s is signaled
-//unsigned long SignalCount3;   // number of times s is signaled
-//unsigned long WaitCount1;     // number of times s is successfully waited on
-//unsigned long WaitCount2;     // number of times s is successfully waited on
-//unsigned long WaitCount3;     // number of times s is successfully waited on
-//#define MAXCOUNT 20000
-//void OutputThread(void){  // foreground thread
-//  UART_OutString("\n\rEE345M/EE380L, Lab 3 Preparation 4\n\r");
-//  while(SignalCount1+SignalCount2+SignalCount3<100*MAXCOUNT){
-//    OS_Sleep(1000);   // 1 second
-//    UART_OutString(".");
-//  }       
-//  UART_OutString(" done\n\r");
-//  UART_OutString("Signalled="); UART_OutUDec(SignalCount1+SignalCount2+SignalCount3);
-//  UART_OutString(", Waited="); UART_OutUDec(WaitCount1+WaitCount2+WaitCount3);
-//  UART_OutString("\n\r");
-//  OS_Kill();
-//}
-//void Wait1(void){  // foreground thread
-//  for(;;){
-//    OS_Wait(&s);    // three threads waiting
-//    WaitCount1++; 
-//  }
-//}
-//void Wait2(void){  // foreground thread
-//  for(;;){
-//    OS_Wait(&s);    // three threads waiting
-//    WaitCount2++; 
-//  }
-//}
-//void Wait3(void){   // foreground thread
-//  for(;;){
-//    OS_Wait(&s);    // three threads waiting
-//    WaitCount3++; 
-//  }
-//}
-//void Signal1(void){      // called every 799us in background
-//  if(SignalCount1<MAXCOUNT){
-//    OS_Signal(&s);
-//    SignalCount1++;
-//  }
-//}
-//// edit this so it changes the periodic rate
-//void Signal2(void){       // called every 1111us in background
-//  if(SignalCount2<MAXCOUNT){
-//    OS_Signal(&s);
-//    SignalCount2++;
-//  }
-//}
-//void Signal3(void){       // foreground
-//  while(SignalCount3<98*MAXCOUNT){
-//    OS_Signal(&s);
-//    SignalCount3++;
-//  }
-//  OS_Kill();
-//}
-//
-//long add(const long n, const long m){
-//static long result;
-//  result = m+n;
-//  return result;
-//}
-//int Testmain6(void){      // Testmain6  Lab 3
-//  volatile unsigned long delay;
-//  OS_Init();           // initialize, disable interrupts
-//  delay = add(3,4);
-//  PortE_Init();
-//  SignalCount1 = 0;   // number of times s is signaled
-//  SignalCount2 = 0;   // number of times s is signaled
-//  SignalCount3 = 0;   // number of times s is signaled
-//  WaitCount1 = 0;     // number of times s is successfully waited on
-//  WaitCount2 = 0;     // number of times s is successfully waited on
-//  WaitCount3 = 0;     // number of times s is successfully waited on
-//  OS_InitSemaphore(&s,0);    // this is the test semaphore
-//  OS_AddPeriodicThread(&Signal1,(799*TIME_1MS)/1000,0);   // 0.799 ms, higher priority
-//  OS_AddPeriodicThread(&Signal2,(1111*TIME_1MS)/1000,1);  // 1.111 ms, lower priority
-//  NumCreated = 0 ;
-//  NumCreated += OS_AddThread(&Thread6,128,6);       // idle thread to keep from crashing
-//  NumCreated += OS_AddThread(&OutputThread,128,2);  // results output thread
-//  NumCreated += OS_AddThread(&Signal3,128,2);   // signalling thread
-//  NumCreated += OS_AddThread(&Wait1,128,2);     // waiting thread
-//  NumCreated += OS_AddThread(&Wait2,128,2);     // waiting thread
-//  NumCreated += OS_AddThread(&Wait3,128,2);     // waiting thread
-// 
-//  OS_Launch(TIME_1MS);  // 1ms, doesn't return, interrupts enabled in here
-//  return 0;             // this never executes
-//}
-//
-//
-////******************* Lab 3 Measurement of context switch time**********
-//// Run this to measure the time it takes to perform a task switch
-//// UART0 not needed 
-//// SYSTICK interrupts, period established by OS_Launch
-//// first timer not needed
-//// second timer not needed
-//// SW1 not needed, 
-//// SW2 not needed
-//// logic analyzer on PF1 for systick interrupt (in your OS)
-////                on PE0 to measure context switch time
-//void Thread8(void){       // only thread running
-//  while(1){
-//    PE0 ^= 0x01;      // debugging profile  
-//  }
-//}
-//int Testmain7(void){       // Testmain7
-//  PortE_Init();
-//  OS_Init();           // initialize, disable interrupts
-//  NumCreated = 0 ;
-//  NumCreated += OS_AddThread(&Thread8,128,2); 
-//  OS_Launch(TIME_1MS/10); // 100us, doesn't return, interrupts enabled in here
-//  return 0;             // this never executes
-//}
-//
+
+#define UART_OutString(...) printf(__VA_ARGS__)
+//*******PseudoWork*************
+// simple time delay, simulates user program doing real work
+// Input: amount of work in 100ns units (free free to change units
+// Output: none
+void PseudoWork(unsigned short work){
+unsigned short startTime;
+ startTime = OS_Time();    // time in 100ns units
+ while(OS_TimeDifference(startTime,OS_Time()) <= work){} 
+}
+void Thread6(void){  // foreground thread
+ Count1 = 0;          
+ for(;;){
+   Count1++; 
+   PE0 ^= 0x01;        // debugging toggle bit 0  
+ }
+}
+extern void Jitter(void);   // prints jitter information (write this)
+void Thread7(void){  // foreground thread
+ UART_OutString("\n\rEE345M/EE380L, Lab 3 Preparation 2\n\r");
+ OS_Sleep(5000);   // 10 seconds        
+ Jitter();         // print jitter information
+ UART_OutString("\n\r\n\r");
+ OS_Kill();
+}
+#define workA 500       // {5,50,500 us} work in Task A
+#define counts1us 10    // number of OS_Time counts per 1us
+void TaskA(void){       // called every {1000, 2990us} in background
+ PE1 = 0x02;      // debugging profile  
+ CountA++;
+ PseudoWork(workA*counts1us); //  do work (100ns time resolution)
+ PE1 = 0x00;      // debugging profile  
+}
+#define workB 250       // 250 us work in Task B
+void TaskB(void){       // called every pB in background
+ PE2 = 0x04;      // debugging profile  
+ CountB++;
+ PseudoWork(workB*counts1us); //  do work (100ns time resolution)
+ PE2 = 0x00;      // debugging profile  
+}
+#ifdef Testmain5
+int main(void){       // Testmain5 Lab 3
+ PortE_Init();
+ OS_Init();           // initialize, disable interrupts
+ NumCreated = 0 ;
+ NumCreated += OS_AddThread(&Thread6,128,2); 
+ NumCreated += OS_AddThread(&Thread7,128,1); 
+ OS_AddPeriodicThread(&TaskA,TIME_1MS,0);           // 1 ms, higher priority
+ OS_AddPeriodicThread(&TaskB,2*TIME_1MS,1);         // 2 ms, lower priority
+
+ OS_Launch(TIME_2MS); // 2ms, doesn't return, interrupts enabled in here
+ return 0;             // this never executes
+}
+#endif
+
+//******************* Lab 3 Preparation 4**********
+// Modify this so it runs with your RTOS used to test blocking semaphores
+// run this with 
+// UART0, 115200 baud rate,  used to output results 
+// SYSTICK interrupts, period established by OS_Launch
+// first timer interrupts, period established by first call to OS_AddPeriodicThread
+// second timer interrupts, period established by second call to OS_AddPeriodicThread
+// SW1 no interrupts, 
+// SW2 no interrupts
+Sema4Type s;            // test of this counting semaphore
+unsigned long SignalCount1;   // number of times s is signaled
+unsigned long SignalCount2;   // number of times s is signaled
+unsigned long SignalCount3;   // number of times s is signaled
+unsigned long WaitCount1;     // number of times s is successfully waited on
+unsigned long WaitCount2;     // number of times s is successfully waited on
+unsigned long WaitCount3;     // number of times s is successfully waited on
+#define MAXCOUNT 20000
+void OutputThread(void){  // foreground thread
+ UART_OutString("\n\rEE345M/EE380L, Lab 3 Preparation 4\n\r");
+ while(SignalCount1+SignalCount2+SignalCount3<100*MAXCOUNT){
+   OS_Sleep(1000);   // 1 second
+   UART_OutString(".");
+ }       
+ UART_OutString(" done\n\r");
+ UART_OutString("Signalled=%d", SignalCount1+SignalCount2+SignalCount3);
+ UART_OutString(", Waited=%d", WaitCount1+WaitCount2+WaitCount3);
+ UART_OutString("\n\r");
+ OS_Kill();
+}
+void Wait1(void){  // foreground thread
+ for(;;){
+   OS_Wait(&s);    // three threads waiting
+   WaitCount1++; 
+ }
+}
+void Wait2(void){  // foreground thread
+ for(;;){
+   OS_Wait(&s);    // three threads waiting
+   WaitCount2++; 
+ }
+}
+void Wait3(void){   // foreground thread
+ for(;;){
+   OS_Wait(&s);    // three threads waiting
+   WaitCount3++; 
+ }
+}
+void Signal1(void){      // called every 799us in background
+ if(SignalCount1<MAXCOUNT){
+   OS_Signal(&s);
+   SignalCount1++;
+ }
+}
+// edit this so it changes the periodic rate
+void Signal2(void){       // called every 1111us in background
+ if(SignalCount2<MAXCOUNT){
+   OS_Signal(&s);
+   SignalCount2++;
+ }
+}
+void Signal3(void){       // foreground
+ while(SignalCount3<98*MAXCOUNT){
+   OS_Signal(&s);
+   SignalCount3++;
+ }
+ OS_Kill();
+}
+
+long add(const long n, const long m){
+static long result;
+ result = m+n;
+ return result;
+}
+#ifdef Testmain6
+int main(void){      // Testmain6  Lab 3
+ volatile unsigned long delay;
+ OS_Init();           // initialize, disable interrupts
+ delay = add(3,4);
+ PortE_Init();
+ SignalCount1 = 0;   // number of times s is signaled
+ SignalCount2 = 0;   // number of times s is signaled
+ SignalCount3 = 0;   // number of times s is signaled
+ WaitCount1 = 0;     // number of times s is successfully waited on
+ WaitCount2 = 0;     // number of times s is successfully waited on
+ WaitCount3 = 0;     // number of times s is successfully waited on
+ OS_InitSemaphore(&s,0);    // this is the test semaphore
+ OS_AddPeriodicThread(&Signal1,(799*TIME_1MS)/1000,0);   // 0.799 ms, higher priority
+ OS_AddPeriodicThread(&Signal2,(1111*TIME_1MS)/1000,1);  // 1.111 ms, lower priority
+ NumCreated = 0 ;
+ NumCreated += OS_AddThread(&Thread6,128,6);       // idle thread to keep from crashing
+ NumCreated += OS_AddThread(&OutputThread,128,2);  // results output thread
+ NumCreated += OS_AddThread(&Signal3,128,2);   // signalling thread
+ NumCreated += OS_AddThread(&Wait1,128,2);     // waiting thread
+ NumCreated += OS_AddThread(&Wait2,128,2);     // waiting thread
+ NumCreated += OS_AddThread(&Wait3,128,2);     // waiting thread
+
+ OS_Launch(TIME_1MS);  // 1ms, doesn't return, interrupts enabled in here
+ return 0;             // this never executes
+}
+#endif
+
+//******************* Lab 3 Measurement of context switch time**********
+// Run this to measure the time it takes to perform a task switch
+// UART0 not needed 
+// SYSTICK interrupts, period established by OS_Launch
+// first timer not needed
+// second timer not needed
+// SW1 not needed, 
+// SW2 not needed
+// logic analyzer on PF1 for systick interrupt (in your OS)
+//                on PE0 to measure context switch time
+void Thread8(void){       // only thread running
+ while(1){
+   PE0 ^= 0x01;      // debugging profile  
+ }
+}
+#ifdef Testmain7
+// int Testmain7(void){       // Testmain7
+int main(void){
+ PortE_Init();
+ OS_Init();           // initialize, disable interrupts
+ NumCreated = 0 ;
+ NumCreated += OS_AddThread(&Thread8,128,2); 
+ OS_Launch(TIME_1MS/10); // 100us, doesn't return, interrupts enabled in here
+ return 0;             // this never executes
+}
+#endif

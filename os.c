@@ -106,7 +106,7 @@ void OS_Wait(Sema4Type *semaPt) {
   (semaPt->Value) = (semaPt->Value) - 1;
   if(semaPt->Value < 0){
     Tcb_t * runningThread = TCB_GetRunningThread();
-		runningThread->state_blocked = 1;
+    runningThread->state_blocked = 1;
     semaPt->waitList.push_back(runningThread);
     EndCritical(status);
     Schedule_and_Context_Switch();
@@ -135,8 +135,8 @@ void OS_Signal(Sema4Type *semaPt) {
     add_trace(TRACE_SIGNAL);
     (semaPt->Value) = (semaPt->Value) + 1;
     if(semaPt->Value <= 0){
-			Tcb_t* thread = semaPt->waitList.pop_front();
-			thread->state_blocked = 0;
+      Tcb_t* thread = semaPt->waitList.pop_front();
+      thread->state_blocked = 0;
       TCB_PushBackThread(thread);
       TCB_PushBackRunning();
       EndCritical(status);
@@ -331,6 +331,7 @@ void OS_Sleep(unsigned long sleepTime) {
 // output: none
 void OS_Kill(void) {
     long status = StartCritical();
+    add_trace(TRACE_KILL);
     TCB_RemoveRunningThread();
 		ThreadCount--;
     //if TCB_ThreadList is not empty after removing the current thread, context switch
@@ -382,10 +383,11 @@ void OS_Suspend(void)
 // It is ok to limit the range of theTimeSlice to match the 24-bit SysTick
 void OS_Launch(unsigned long theTimeSlice){
     systemPeriod = theTimeSlice;
+    add_trace(TRACE_LAUNCH);
 #ifdef SYSTICK_EN
 
     NVIC_ST_RELOAD_R = theTimeSlice - 1;
-    //	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
+   	NVIC_ST_CURRENT_R = 0;      // any write to current clears it
     NVIC_ST_CTRL_R = 0x00000007;  //Enable core clock, and arm interrupt
 #endif
     StartOS();
