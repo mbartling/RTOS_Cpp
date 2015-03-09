@@ -96,7 +96,7 @@ int Command_list(char * args)
 int Command_disp_message(char * args)
 {
   //printf("Not implemented yet\n");
-  int disp, line, n;
+  int disp, line;//, n;
   char str[64];
   sscanf(args, "%d %d %[^\t\r\n]", &disp, &line, str);
 	//str = args + n;
@@ -124,6 +124,7 @@ int Command_adc_in(char *args)
 
 int Command_perf(char* args){
   printf("\nJitter: %d\nNumSamples: %d\nNumCreated: %d\nDataLost: %d\n", jitter, NumSamples, NumCreated, DataLost  );
+	return 1;
 }
 int Command_x(char* args){
 	int i;

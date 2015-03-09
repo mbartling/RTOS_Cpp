@@ -36,6 +36,7 @@
 #include "UART0.h"
 #include "priority.h"
 #include "UART0_debug.h"
+#include "Perf.h"
 
 #define NVIC_EN0_INT5           0x00000020  // Interrupt 5 enable
 
@@ -81,6 +82,7 @@ void UART0_Handler(void);
                               // create index implementation FIFO (see FIFO.h)
 // AddIndexFifo(Rx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
 // AddIndexFifo(Tx0, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
+//FifoP_SP2MC<char, FIFOSIZE> Rx0Fifo;
 FifoP_SP2MC<char, FIFOSIZE> Rx0Fifo;
 FifoP_MP2SC<char, FIFOSIZE> Tx0Fifo;
 // FifoP<char, FIFOSIZE> Tx0Fifo;
@@ -125,6 +127,7 @@ void static copyHardwareToSoftware(void){
   while(((UART0_FR_R&UART_FR_RXFE) == 0) && (Rx0Fifo.getSize() < (FIFOSIZE - 1))){
     letter = UART0_DR_R;
     // Rx0Fifo_Put(letter);
+    add_trace(TRACE_RX_PUT);
     Rx0Fifo.Put(letter);
   }
 }
@@ -135,6 +138,7 @@ void static copySoftwareToHardware(void){
   // while(((UART0_FR_R&UART_FR_TXFF) == 0) && (Tx0Fifo_Size() > 0)){
   while(((UART0_FR_R&UART_FR_TXFF) == 0) && (Tx0Fifo.getSize() > 0)){
     // Tx0Fifo_Get(&letter);
+    add_trace(TRACE_TX_GET);
     Tx0Fifo.Get(&letter);
     UART0_DR_R = letter;
   }
@@ -145,6 +149,7 @@ char UART0_InChar(void){
   char letter;
   // while(Rx0Fifo_Get(&letter) == FIFOFAIL){};
   // while(!Rx0Fifo.Get(&letter)){};
+  add_trace(TRACE_RX_GET);
   Rx0Fifo.Get(&letter);
 	if(letter == '\r') return('\n');
   return(letter );
@@ -154,6 +159,7 @@ char UART0_InChar(void){
 void UART0_OutChar(char data){
   // while(Tx0Fifo_Put(data) == FIFOFAIL){};
   // while(!Tx0Fifo.Put(data) == FIFOFAIL){};
+  add_trace(TRACE_TX_PUT);
   Tx0Fifo.Put(data);
   UART0_IM_R &= ~UART_IM_TXIM;          // disable TX FIFO interrupt
   copySoftwareToHardware();

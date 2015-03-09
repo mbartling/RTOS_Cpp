@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "sleepList.hpp"
 #include "Exception.hpp"
+#include "Perf.h"
 // #include <iostream>
 #define DEBUGprintf(...) /**/
 
@@ -148,10 +149,13 @@ void TCB_PushBackThread(Tcb_t* thread){
 void TCB_Scheduler(void){
   // Pick Running Thread Next
 //  if(RunningThread->next == RunningThread) {
+  add_trace(TRACE_SCHEDULER);
       for(int i = 0;  i < IDLE_THREAD_PRIORITY; ++i){
 //          if((!PriorityList[i].isEmpty()) && (ThreadList.count!=0)){
           if((!PriorityList[i].isEmpty())) {
-              RunningThread->next = PriorityList[i].pop_front();
+              Tcb_t* thread = PriorityList[i].pop_front();
+              thread->next = thread;
+              RunningThread->next = thread;
               break;    
           }
       }

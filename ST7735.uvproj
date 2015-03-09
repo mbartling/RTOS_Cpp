@@ -431,16 +431,6 @@
               <FilePath>.\UART0.c</FilePath>
             </File>
             <File>
-              <FileName>test.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\test.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>os.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\os.c</FilePath>
-            </File>
-            <File>
               <FileName>TCB.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\TCB.c</FilePath>
@@ -449,6 +439,61 @@
               <FileName>SysTickInts.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\SysTickInts.c</FilePath>
+            </File>
+            <File>
+              <FileName>Perf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Perf.c</FilePath>
+            </File>
+            <File>
+              <FileName>priority.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\priority.c</FilePath>
+            </File>
+            <File>
+              <FileName>ST7735.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ST7735.c</FilePath>
+            </File>
+            <File>
+              <FileName>Switch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Switch.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ADC.c</FilePath>
+            </File>
+            <File>
+              <FileName>cr4_fft_64_stm32.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\cr4_fft_64_stm32.s</FilePath>
+            </File>
+            <File>
+              <FileName>osasm.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\osasm.s</FilePath>
+            </File>
+            <File>
+              <FileName>PID_stm32.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\PID_stm32.s</FilePath>
+            </File>
+            <File>
+              <FileName>test_set_Lab2.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\test_set_Lab2.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>os.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\os.c</FilePath>
             </File>
           </Files>
         </Group>

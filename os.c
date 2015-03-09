@@ -11,6 +11,7 @@
 #include "priority.h"
 #include "Mailbox.hpp"
 #include "sleepList.hpp"
+#include "Perf.h"
 #define STACKSIZE 100
 #define SYSTICK_EN 1  
 #define MaxNumberOfPeriodicThreads 10
@@ -62,9 +63,8 @@ periodicThread periodicThreadList[MaxNumberOfPeriodicThreads];
 
 inline void Schedule_and_Context_Switch(void){
   long status = StartCritical();
- // if(RunningThread->next == RunningThread) {
-      TCB_Scheduler();
-  //} 
+  add_trace(TRACE_CS);
+  TCB_Scheduler();
   EndCritical(status);
   NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
 }
@@ -102,10 +102,12 @@ void OS_Init(void)
 // the following defintion is suitable for coopeartive semaphores
 void OS_Wait(Sema4Type *semaPt) {
   long status = StartCritical();
+  add_trace(TRACE_WAIT);
   (semaPt->Value) = (semaPt->Value) - 1;
   if(semaPt->Value < 0){
     Tcb_t * runningThread = TCB_GetRunningThread();
-    (semaPt->waitList).push_back(runningThread);
+		runningThread->state_blocked = 1;
+    semaPt->waitList.push_back(runningThread);
     EndCritical(status);
     Schedule_and_Context_Switch();
   }
@@ -130,12 +132,15 @@ void OS_Wait(Sema4Type *semaPt) {
 // output: none
 void OS_Signal(Sema4Type *semaPt) {
     long status = StartCritical();
+    add_trace(TRACE_SIGNAL);
     (semaPt->Value) = (semaPt->Value) + 1;
     if(semaPt->Value <= 0){
-      TCB_PushBackThread(semaPt->waitList.pop_front());
-//      TCB_PushBackRunning();
+			Tcb_t* thread = semaPt->waitList.pop_front();
+			thread->state_blocked = 0;
+      TCB_PushBackThread(thread);
+      TCB_PushBackRunning();
       EndCritical(status);
-//      Schedule_and_Context_Switch();
+      Schedule_and_Context_Switch();
     }
     EndCritical(status);
 }
@@ -195,6 +200,7 @@ int OS_AddThread(void(*task)(void),
   }
   long status;
   status = StartCritical();
+  add_trace(TRACE_ADD_THREAD);
   // if(ThreadCount > (MAXNUMTHREADS - 1)){
   if(!TCB_Available())
 	{
@@ -307,7 +313,7 @@ int OS_AddPeriodicThread(void(*task)(void),
 // OS_Sleep(0) implements cooperative multitasking
 void OS_Sleep(unsigned long sleepTime) {
     long status = StartCritical();
-
+    add_trace(TRACE_SLEEP);
     Tcb_t * runningThread = TCB_GetRunningThread();
     runningThread-> state_sleep = sleepTime;
     
@@ -326,7 +332,7 @@ void OS_Sleep(unsigned long sleepTime) {
 void OS_Kill(void) {
     long status = StartCritical();
     TCB_RemoveRunningThread();
-    ThreadCount--;
+		ThreadCount--;
     //if TCB_ThreadList is not empty after removing the current thread, context switch
     // if(TCB_threadListEmpty != 0) {
         // OS_Suspend(); 
@@ -618,10 +624,14 @@ void Timer1A_Handler(void) {
 void SysTick_Handler(void){
     long status;
     status = StartCritical();
+    add_trace(TRACE_SYSTICK);
     TCB_PromotePriority();
     TCB_UpdateSleeping();
     TCB_PushBackRunning();
+
     Schedule_and_Context_Switch();
+    
+
     //NVIC_INT_CTRL_R = NVIC_INT_CTRL_PEND_SV;
     systemTime3++;
     EndCritical(status);

@@ -183,6 +183,9 @@ public:
 
     if(nextPutPt == GetPt){
       LostData++;
+			this->Signal_s2();
+			return(FAIL);
+
     }
    else{
       *(PutPt) = data;
@@ -235,7 +238,7 @@ class FifoP_MP2SC : public Fifo{
   // enum Status {FAIL=-1, SUCCESS=0};
 
 public:
-  FifoP_MP2SC() : Fifo(1,1){
+  FifoP_MP2SC() : Fifo(1,Size-1){
     long sr;
     sr = StartCritical();
     FifoSize = Size;

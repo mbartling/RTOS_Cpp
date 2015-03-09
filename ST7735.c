@@ -1610,8 +1610,8 @@ void ST7735_Message(IN int device, IN int line, IN char* string, IN long value)
   }
 
   //If want to save and restore cursor
-  uint32_t StY_save = StY;
-  uint32_t StX_save = StX;
+//  uint32_t StY_save = StY;
+//  uint32_t StX_save = StX;
 
   // Set cursor Position
   StY = device*8 + line;
